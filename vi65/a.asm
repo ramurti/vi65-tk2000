@@ -355,7 +355,11 @@ k_control       = -128
 		.case APPLE2
 k_cursordown    = 10
 k_cursorup      = 11
+		.if TK
+k_cursorleft    = 31            ;LEFT moves, CTRL-H deletes
+		.else
 k_cursorleft    = 255
+		.fi
 k_cursorright   = 21
 k_del           = 8
 k_return        = 13

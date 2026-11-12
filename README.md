@@ -13,7 +13,8 @@ itself after about 47 seconds. On a real TK2000: `LOADT` and play `dist/vi65.wav
 The editor starts with one empty line in normal mode, as vi. VI65 has a subset of vi
 (`reference/vi65/bin/doc.txt`; the manual copies VIM's text, the code has less):
 
-- insert: `i a I A o O` (CTRL-C to leave), CTRL-E / CTRL-Y insert the character below/above;
+- insert: `i a I A o O` (CTRL-C to leave), CTRL-H deletes, the arrows move, CTRL-E / CTRL-Y
+  insert the character below/above;
 - delete and change: `x X D C s S J`, `d c y` + a motion (`dd`, `d$`, `cc`, `yy`), `p P`;
 - motions: `h j k l` (and the arrows), `0 ^ $ |`, `f t F T`, `H M L`, `G gg`, `+ -` RETURN,
   SPACE, marks (`m` then `'` or the backquote, which the TK2000 lacks); counts (`3dd`, `5j`);
@@ -23,8 +24,9 @@ The editor starts with one empty line in normal mode, as vi. VI65 has a subset o
 
 Not in VI65: word motions (`w b e`), undo (`u`), `n`, `r`, `.`.
 
-Checked in the emulator so far: insert, RETURN, CTRL-C, LEFT as delete, SHIFT symbols,
-CTRL+SHIFT+O, `x dd yy p G gg`, `/` search, `:w` (no file name), `:q`, key repeat.
+Checked in the emulator so far: insert, RETURN, CTRL-C, CTRL-H, LEFT in insert mode and in the
+`:` line, all SHIFT letters and symbols, CTRL+SHIFT symbols, `x dd yy p G gg`, `/` search, `:w`
+(no file name), `:q`, key repeat.
 
 ### Keys
 
@@ -35,11 +37,12 @@ The TK2000 has no lower case keys and no ESC; the keyboard (`vi65/tk.asm`) maps:
 | a letter | the lower case letter (vi's commands) |
 | SHIFT + letter | the upper case letter |
 | SHIFT + 1 2 3 4 5 6 7 8 9 0 | `! " # $ % & ' ( ) *` |
-| SHIFT + I O P, K L, `:` `,` `.` `?` | `- = +`, `^ @`, `; < > /` (the symbols the TK2000 prints on them) |
-| CTRL + SHIFT + letter | the upper case letter (for I O P K L, whose SHIFT gives a symbol) |
+| SHIFT + `:` `,` `.` `?` | `; < > /` |
+| CTRL + SHIFT + I O P K L | `- = + ^ @` (the symbols the TK2000 prints on them) |
 | **CTRL + C** | **ESC** (leaves insert mode, as in vim) |
+| **CTRL + H** | **backspace**: deletes the character before the cursor in insert mode and in the `:` and `/` lines |
 | CTRL + letter | the control code (CTRL-F, CTRL-B, CTRL-E, CTRL-Y...) |
-| arrows | move; LEFT deletes the character before the cursor in insert mode (as on the Apple II) |
+| arrows | move the cursor, also in insert mode and in the `:` line |
 
 A held key repeats after 0,5 s, 15 times a second. Keys typed while the screen is redrawn are
 kept (up to 8) and processed after it: the TK2000 has no keyboard latch, and fast typing lost
@@ -79,6 +82,8 @@ The source is VI65's svn trunk (`vi65/`, the original in `reference/vi65/code/`)
   the TK2000's tape relay, not touched;
 - keyboard: `tk.asm` scans the matrix in place of the Apple's `$C000` latch, and the display
   polls it between lines (`tkpoll`) so keys aren't lost during redraws;
+- LEFT gives code 31 (`k_cursorleft`) and moves; on the Apple it is CTRL-H, which deletes in
+  insert mode;
 - CTRL keys: `k_control` = 96, as the Apple target's source is ASCII ("e"-96 = CTRL-E);
 - starts with an empty line (the Apple version loads `doc.seq` from the disk at start);
 - no DOS: load/save stubbed, `:q` jumps to the reset vector.

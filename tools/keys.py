@@ -2,23 +2,28 @@
 
 Usage: keys.py START "text" -> prints -k arguments for build/run (zsh: run ... $(keys.py ...))
 Text: plain characters are TK2000 keys (lower case = the key alone, upper case = SHIFT + key);
-{ret} {left} {right} {up} {down} {esc} (= CTRL-C) and {S-x} (SHIFT + x) are special keys.
+- = + ^ @ are CTRL + SHIFT + I O P K L; {ret} {left} {right} {up} {down} {esc} (= CTRL-C),
+{bs} (= CTRL-H) and {S-x} (SHIFT + x) are special keys.
 """
 import re
 import sys
 
 STEP, HOLD = 0.15, 0.06
 SHIFTED = {'!': '1', '"': '2', '#': '3', '$': '4', '%': '5', '&': '6', "'": '7', '(': '8',
-           ')': '9', '*': '0', '-': 'i', '=': 'o', '+': 'p', '^': 'k', '@': 'l', ';': ':',
+           ')': '9', '*': '0', ';': ':',
            '<': ',', '>': '.', '/': '?'}
+CTRLSHIFTED = {'-': 'i', '=': 'o', '+': 'p', '^': 'k', '@': 'l'}
 NAMES = {' ': 'space', ',': ',', '.': '.', ':': ':', '?': '?'}
 
 
 def args(start, text):
     out, t = [], start
     for tok in re.findall(r"\{[^}]+\}|.", text, re.S):
-        if tok == "{esc}":
-            out += ["-k", f"{t:.2f}:{HOLD + 0.08:.2f}:ctrl", "-k", f"{t + 0.04:.2f}:{HOLD:.2f}:c"]
+        if tok in ("{esc}", "{bs}"):
+            key = "c" if tok == "{esc}" else "h"
+            out += ["-k", f"{t:.2f}:{HOLD + 0.08:.2f}:ctrl", "-k", f"{t + 0.04:.2f}:{HOLD:.2f}:{key}"]
+        elif tok in CTRLSHIFTED:
+            out += ["-k", f"{t:.2f}:{HOLD + 0.08:.2f}:ctrl", "-k", f"{t + 0.04:.2f}:{HOLD:.2f}:S-{CTRLSHIFTED[tok]}"]
         elif tok.startswith("{"):
             out += ["-k", f"{t:.2f}:{HOLD}:{tok[1:-1].replace('ret', 'return')}"]
         elif tok in SHIFTED:

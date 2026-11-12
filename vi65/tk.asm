@@ -5,11 +5,11 @@
 ;    codes the Apple II version reads from $c000 (ASCII, arrows as CTRL codes).
 ;
 ;    plain key           lower case letter, digit, , . : ? space
-;    SHIFT + key         upper case letter, or the symbol printed on the key
-;                        (1-0: ! " # $ % & ' ( ) *, I O P: - = +, K L: ^ @, : ; , . ?: < > /)
-;    CTRL + letter       control code (CTRL-C leaves insert mode, as ESC)
-;    CTRL + SHIFT + key  upper case letter (for I O P K L, whose SHIFT gives a symbol)
-;    arrows, RETURN      CTRL-H (also delete in insert mode), CTRL-U, CTRL-J, CTRL-K, CTRL-M
+;    SHIFT + key         upper case letter, or the symbol printed on a digit or punctuation key
+;                        (1-0: ! " # $ % & ' ( ) *, : ; , . ?: < > /)
+;    CTRL + letter       control code (CTRL-C leaves insert mode, as ESC; CTRL-H deletes)
+;    CTRL + SHIFT + key  the symbol printed on I O P K L (- = + ^ @), else as SHIFT
+;    arrows, RETURN      31 (k_cursorleft), CTRL-U, CTRL-J, CTRL-K, CTRL-M
 ;
 ;    Keys pressed while the screen is redrawn are kept: the display calls tkpoll between lines
 ;    and waitkey reads them first (tkget). Without this, fast typing lost keys during redraws.
@@ -108,7 +108,7 @@ code            lda #1                  ;SHIFT: row 0 alone, column 0
                 and #$1f
                 sec
                 rts
-upper           and #$df
+upper           lda symbols,x       ;CTRL + SHIFT + letter
                 sec
                 rts
 plain           ldy shift
@@ -151,13 +151,15 @@ done            lda #0
                 rts
                 .pend
 
-rowbit          .byte $01, $02, $04, $08, $10, $20, $40, $80
+;row 0 is read together with row 1 (already found empty): with KBOUT = $01 alone and SHIFT
+;down, the emulator answers SHIFT only, and SHIFT + B V C X Z were lost
+rowbit          .byte $03, $02, $04, $08, $10, $20, $40, $80
 rowmask         .byte $3e, $3e, $3f, $3f, $3f, $3f, $3f, $3f    ;column 0 of rows 0-1: SHIFT
 
 keys            .text 0, "bvcxz"
                 .text 0, "gfdsa"
                 .text " ", "trewq"
-                .text 8, "54321"
+                .text 31, "54321"
                 .text 21, "67890"
                 .text 10, "yuiop"
                 .text 11, "hjkl:"
@@ -165,11 +167,18 @@ keys            .text 0, "bvcxz"
 shifted         .text 0, "BVCXZ"
                 .text 0, "GFDSA"
                 .text " ", "TREWQ"
-                .text 8, "%$#", '"', "!"
+                .text 31, "%$#", '"', "!"
                 .text 21, "&'()*"
-                .text 10, "YU-=+"
-                .text 11, "HJ^@;"
+                .text 10, "YUIOP"
+                .text 11, "HJKL;"
                 .text 13, "NM<>/"
+symbols         .text 0, "BVCXZ"        ;CTRL + SHIFT + letter
+                .text 0, "GFDSA"
+                .text 0, "TREWQ"
+                .fill 12
+                .text 0, "YU-=+"
+                .text 0, "HJ^@", 0
+                .text 0, "NM"
 
 held            .byte 255
 repeating       .byte 0
