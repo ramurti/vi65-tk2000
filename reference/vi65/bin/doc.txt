@@ -1,0 +1,328 @@
+VI65 text editor
+
+A VI implementation for 6502 machines.
+
+This is the "manual" of the multi platform VI65 0.2 editor.
+
+The editor (and the documentation) is far from finished, and
+there are a lots of bugs. Maybe the next version will be better
+;)
+
+Supported platforms:
+
+Commodore 64, 128, 16, Plus 4, VIC20 (expanded), PET 40/80.
+Atari 8bit, Apple II. There's a plugin version for the IDE64
+filemanager too.
+
+Supported text modes:
+
+  * C64 - 40/53/64/80x25 (VDC 80x25 on C128)
+  * C128 - 40/53/64/80x25, VDC 80x25
+  * +4 - 40x25, 53/64/80x23
+  * C16 - 40x25
+  * VIC20 - 22x23, 26/35/40x22
+  * PET - 40/80x25
+  * ATARI - 40/53/64/80x24
+  * APPLE II - 40/46/56/80x24
+
+Some text modes use custom 4x8, 5x8 and 6x8 charsets on graphic
+screen.
+
+Screenshots:
+
+C128 VDC C64 C16 VIC20 APPLE II ATARI 800 PET +4
+
+Limitations:
+
+  * 251 characters in a line
+  * 65535 lines of text (memory runs out faster...)
+  * 65535 maximum count
+  * Platform native text format only
+  * Paste register only limited by the amount of memory
+  * No extra memory support yet
+  * Single buffer editing for now
+
+The following key description was mostly copied from the VIM
+7.2 manual.
+
+Motion keys
+
+j or <Right>
+
+[count] characters to the right. exclusive motion.
+
+h or <Left> or CTRL-H
+
+[count] characters to the left. exclusive motion.
+
+0 or <Home>
+
+To the first character of the line. exclusive motion.
+
+g$ or g<End>
+
+To the rightmost character of the current line that is visible
+on the screen. Differs from "$" when the last character of the
+line is not on the screen. Additionally, vertical movements
+keep the column, instead of going to the end of the line.
+inclusive.
+
+g0 or g<Home>
+
+To the leftmost character of the current line that is on the
+screen. Differs from "0" when the first character of the line
+is not on the screen. exclusive motion.
+
+gm
+
+Like "g0", but half a screenwidth to the right (or as much as
+possible). exclusive.
+
+^
+
+To the first non-blank character of the line. exclusive.
+
+|
+
+To screen column [count] in the current line. exclusive motion.
+
+$ or <End>
+
+To the end of the line. When a count is given also go [count -
+1] lines downward inclusive.
+
+t{char}
+
+Till before [count]'th occurrence of {char} to the right. The
+cursor is placed on the character left of {char}. inclusive.
+
+f{char}
+
+To [count]'th occurrence of {char} to the right. The cursor is
+placed on {char}. inclusive.
+
+T
+
+Till after [count]'th occurrence of {char} to the left. The
+cursor is placed on the character right of {char} exclusive.
+
+F
+
+To the [count]'th occurrence of {char} to the left. The cursor
+is placed on {char} exclusive.
+
+L
+
+To line [count] from bottom of window (default: Last line on
+the window) on the first non-blank character linewise.
+
+H
+
+To line [count] from top (Home) of window (default: first line
+on the window) on the first non-blank character linewise.
+
+M
+
+To Middle line of window, on the first non-blank character
+linewise.
+
+G
+
+Goto line [count], default last line, on the first non-blank
+character linewise.
+
+gg
+
+Goto line [count], default first line, on the first non-blank
+character linewise.
+
+j or <Down> or CTRL-J or CTRL-N or <NL>
+
+[count] lines downward linewise.
+
+k or <Up> or CTRL-P
+
+[count] lines upward linewise.
+
+- <minus>
+
+[count] lines upward, on the first non-blank character
+linewise.
+
++ or CTRL-M or <CR>
+
+[count] lines downward, on the first non-blank character
+linewise.
+
+'{a-z}
+
+The cursor is positioned on the first non-blank character in
+the line of the specified location and the motion is linewise.
+
+`{a-z[]} or <-{a-z[]}
+
+The cursor is positioned at the specified location and the
+motion is exclusive.
+
+Normal mode keys
+
+gI
+
+Insert text in column 1.
+
+c{motion}
+
+Delete {motion} text and start insert.
+
+C
+
+Delete from the cursor position to the end of the line and
+[count]-1 more lines , and start insert. Synonym for c$
+
+s
+
+Delete [count] characters and start insert (s stands for
+Substitute). Synonym for "cl"
+
+S
+
+Delete [count] lines and start insert. Synonym for "cc"
+linewise.
+
+y{motion}
+
+Yank {motion} text .
+
+d{motion}
+
+Delete text that {motion} moves over .
+
+D
+
+Delete the characters under the cursor until the end of the
+line and [count]-1 more lines synonym for "d$".
+
+x
+
+Delete [count] characters under and after the cursor (not
+linewise). Does the same as "dl".
+
+X
+
+Delete [count] characters before the cursor (not linewise).
+Does the same as "dh".
+
+O
+
+Begin a new line above the cursor and insert text
+
+o
+
+Begin a new line below the cursor and insert text
+
+p
+
+Put the text after the cursor [count] times.
+
+P
+
+Put the text before the cursor [count] times.
+
+J
+
+Join 2 lines.
+
+m{a-z}
+
+Set mark {a-z} at cursor position
+
+<backspace>
+
+Move backward.
+
+<space>
+
+Move forward.
+
+zL
+
+Move the view on the text half a screenwidth to the right, thus
+scroll the text half a screenwidth to the left.
+
+z<Right> or zl
+
+Move the view on the text [count] characters to the right, thus
+scroll the text [count] characters to the left.
+
+zH
+
+Move the view on the text half a screenwidth to the left, thus
+scroll the text half a screenwidth to the right.
+
+z<Left> or zh
+
+Move the view on the text [count] characters to the left, thus
+scroll the text [count] characters to the right.
+
+ze
+
+Scroll the text horizontally to position the cursor at the end
+(right side) of the screen.
+
+zs
+
+Scroll the text horizontally to position the cursor at the
+start (left side) of the screen.
+
+CTRL-E
+
+Scroll window [count] lines downwards in the buffer.
+
+CTRL-Y
+
+Scroll window [count] lines upwards in the buffer.
+
+A
+
+Append text at the end of the line.
+
+a
+
+Append text after the cursor times. If the cursor is in the
+first column of an empty line Insert starts there.
+
+I
+
+Insert text before the first non-blank in the line
+
+/
+
+Search for text.
+
+:q
+
+Quit. No question for unsaved changes yet!
+
+:f [filename]
+
+Set/print filename
+
+:e [filename]
+
+Edit file. File is loaded in the background, the loaded part
+can be edited imediately. Paste register is not cleared!
+
+:w [filename]
+
+Write file.
+
+Download
+
+VI65 v0.1
+
+VI65 v0.2
+
+That's all for now.
+
+VI65 (C) 2010-2011 Soci/Singular <soci at server c64.rulez.org>
+
