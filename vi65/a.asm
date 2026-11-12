@@ -966,7 +966,11 @@ keyroutines
                 .fi
 
                 .rta motion_l
+		.if TK
+                .rta cmd_X              ;TK2000: LEFT deletes on the command line
+		.else
                 .rta cmd_h
+		.fi
                 .rta cmd_0, motion_dollar
                 .rta cmd_0, motion_dollar
                 .rta cmd_exit, cmd_exit
