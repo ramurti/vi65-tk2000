@@ -8,6 +8,7 @@
 ;    SHIFT + key         upper case letter, or the symbol printed on a digit or punctuation key
 ;                        (1-0: ! " # $ % & ' ( ) *, : ; , . ?: < > /)
 ;    CTRL + letter       control code (CTRL-C leaves insert mode, as ESC; CTRL-H deletes)
+;    CTRL alone          pressed and released with no other key: CTRL-C (ESC)
 ;    CTRL + SHIFT + key  the symbol printed on I O P K L (- = + ^ @), else as SHIFT
 ;    arrows, RETURN      31 (k_cursorleft), CTRL-U, CTRL-J, CTRL-K, CTRL-M
 ;
@@ -64,7 +65,10 @@ tkkey           .proc
                 lda #0
                 sta repeating
                 jsr scan
-                cpx held
+                jsr ctrltap
+                bcc +
+                rts
++               cpx held
                 beq same
                 stx held
                 cpx #255
@@ -119,6 +123,39 @@ plain           ldy shift
 got             cmp #1                  ;0: no character
                 rts
 none            clc
+                rts
+                .pend
+
+;C=1 and A = 3 (CTRL-C, ESC) when CTRL is released and no other key was pressed while it was
+;down; X (the key down, from scan) kept
+ctrltap         .proc
+                lda #0
+                sta kbout
+                sta ctrlon
+                lda kbin
+                sta ctrloff
+                and #1
+                beq up
+                cpx #255
+                bne used
+                lda ctrlalone
+                bne +
+                inc ctrlalone           ;CTRL down alone
++               clc
+                rts
+used            lda #2                  ;CTRL + a key: no ESC on release
+                sta ctrlalone
+                clc
+                rts
+up              ldy ctrlalone
+                lda #0
+                sta ctrlalone
+                cpy #1
+                bne +
+                lda #3
+                sec
+                rts
++               clc
                 rts
                 .pend
 
@@ -195,7 +232,8 @@ bufn            .byte 0
 buf             .fill BUFSIZE
 count           .word 0
 shift           .byte 0
-col             .byte 0
+ctrlalone       .byte 0                 ;0 up, 1 down alone, 2 down with a key
+col            .byte 0
 row2            .byte 0
 
 ;

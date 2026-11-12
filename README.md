@@ -13,7 +13,7 @@ itself after about a minute. On a real TK2000: `LOADT` and play `dist/vi65.wav` 
 The editor starts with one empty line in normal mode, as vi. VI65 has a subset of vi
 (`reference/vi65/bin/doc.txt`; the manual copies VIM's text, the code has less):
 
-- insert: `i a I A o O` (CTRL-C to leave), CTRL-H deletes, the arrows move, CTRL-E / CTRL-Y
+- insert: `i a I A o O` (CTRL alone or CTRL-C to leave), CTRL-H deletes, the arrows move, CTRL-E / CTRL-Y
   insert the character below/above;
 - delete and change: `x X D C s S J`, `d c y` + a motion (`dd`, `d$`, `cc`, `yy`), `p P`;
 - motions: `h j k l` (and the arrows), `0 ^ $ |`, `f t F T`, `H M L`, `G gg`, `+ -` RETURN,
@@ -72,7 +72,8 @@ The TK2000 has no lower case keys and no ESC; the keyboard (`vi65/tk.asm`) maps:
 | SHIFT + 1 2 3 4 5 6 7 8 9 0 | `! " # $ % & ' ( ) *` |
 | SHIFT + `:` `,` `.` `?` | `; < > /` |
 | CTRL + SHIFT + I O P K L | `- = + ^ @` (the symbols the TK2000 prints on them) |
-| **CTRL + C** | **ESC** (leaves insert mode, as in vim) |
+| **CTRL alone** (pressed and released) | **ESC** (leaves insert mode, as in vim) |
+| CTRL + C | ESC too |
 | **CTRL + H** | **backspace**: deletes the character before the cursor in insert mode and in the `:` and `/` lines |
 | CTRL + letter | the control code (CTRL-F, CTRL-B, CTRL-E, CTRL-Y...) |
 | arrows | move the cursor, also in insert mode; in the `:` and `/` lines LEFT deletes (as backspace) |
