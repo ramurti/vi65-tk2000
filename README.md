@@ -43,15 +43,20 @@ too big, `:q` and `CALL 16387`.
   than the free memory (about 24K, less 5 bytes per line) is refused with "out of memory" before
   it is read; stop the tape then.
 - `:e` replaces the text (VI65 doesn't ask about unsaved changes).
+- **Several files on one tape:** each `:w` is recorded after the last one (don't rewind in
+  between); `:e name` skips the others until it finds `name`.
+- **Speed:** about 7 s per 1K of text (the ROM's 250/500 µs bits): a 10K file takes about 70 s
+  once the recorder reaches it.
 
 In the emulator, what the TK2000 saves goes to `recorded.ct2`, next to the inserted tape (the
-emulator's own recording, from Nov 2026): insert it to load the file back. `tools/ct2txt.py
+emulator's own recording, from Nov 2026): every save is appended to it, so it holds all the
+files saved, in order, as a real tape would; insert it to load them back. `tools/ct2txt.py
 TAPE.ct2` writes the files of a tape as `.txt`; `tools/txt2ct2.py FILE.txt NAME OUT.ct2` turns a
 text into a tape for `:e`.
 
 ### Leaving and coming back
 
-`:q` goes back to BASIC (by a reset); the text stays in memory. **`CALL 16387`** returns to the
+`:q` goes back to BASIC with the screen cleared; the text stays in memory. **`CALL 16387`** returns to the
 editor with the text, the cursor and the file name as they were (`CALL 16384` starts it again,
 empty). BASIC programs, `HGR2` and `NEW` don't touch the text area (`$60A3-$BEFF`), but loading
 another program over it does.
@@ -81,7 +86,6 @@ Missing on the keyboard: `[ ] { } \ | ~ _` and the backquote.
 ## Not done yet
 
 - Files on disk.
-- `:q` leaves the screen in mono with the text.
 - Tested only in the emulator.
 
 ## Build

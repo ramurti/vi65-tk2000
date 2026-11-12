@@ -263,7 +263,12 @@ displayexit     .proc
                 jmp ciov                ;close
 		.default
 		.if TK
-                jmp ($fffc)             ;TK2000: back to BASIC by a reset
+                bit $c051               ;TK2000: back to BASIC as RESET does, but with
+                jsr $fe84               ;the screen cleared and the prompt at the top
+                jsr $fe93               ;(RESET's INIT would put it at the bottom)
+                jsr $fe89
+                jsr $fc58
+                jmp ($03f2)
 		.fi
                 rts
 		.endswitch
