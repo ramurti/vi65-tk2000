@@ -7,7 +7,7 @@ draws its own 5 × 8 font on the hi-res screen: **56 columns × 24 lines**, uppe
 ## Load and use
 
 In the emulator: F2 -> insert `dist/vi65.ct2`, type `LOADT`, RETURN, F6 (play). It starts by
-itself after about 47 seconds. On a real TK2000: `LOADT` and play `dist/vi65.wav` (made by
+itself after about a minute. On a real TK2000: `LOADT` and play `dist/vi65.wav` (made by
 `make dist`, not in git).
 
 The editor starts with one empty line in normal mode, as vi. VI65 has a subset of vi
@@ -20,13 +20,41 @@ The editor starts with one empty line in normal mode, as vi. VI65 has a subset o
   SPACE, marks (`m` then `'` or the backquote, which the TK2000 lacks); counts (`3dd`, `5j`);
 - scroll: CTRL-F, CTRL-B, CTRL-E, CTRL-Y, `z` commands;
 - `/` search, CTRL-G (file information);
-- `:e :ene :f :w :wq :q`.
+- `:e :ene :f :w :wq :q`: files on tape (below).
 
 Not in VI65: word motions (`w b e`), undo (`u`), `n`, `r`, `.`.
 
 Checked in the emulator so far: insert, RETURN, CTRL-C, CTRL-H, LEFT in insert mode and in the
-`:` line, all SHIFT letters and symbols, CTRL+SHIFT symbols, `x dd yy p G gg`, `/` search, `:w`
-(no file name), `:q`, key repeat.
+`:` line, all SHIFT letters and symbols, CTRL+SHIFT symbols, `x dd yy p G gg`, `/` search, key
+repeat, `:w` and `:e` on tape (a 9K file of 300 lines loaded, edited, saved and compared), a file
+too big, `:q` and `CALL 16387`.
+
+### Files on tape
+
+- **`:w name`** saves the text on tape: press REC (and PLAY) on the recorder first. The status
+  line says "writing the tape", then "saved".
+- **`:e name`** loads a file: type it, then press PLAY. The status line says "reading the tape"
+  until the file is found and read; the lines appear as they are read, and you can already move
+  and edit while the rest loads.
+- The name is cut to **6 characters, in upper case** (the TK2000's tape names): `:w notes` saves
+  `NOTES`. The files are plain text (CR after each line), so `LOADT NOTES` in BASIC reads them
+  too, and other files on the tape are skipped as LOADT does.
+- **No way to cancel a load** other than RESET (it waits for the tape, as LOADT). A file bigger
+  than the free memory (about 24K, less 5 bytes per line) is refused with "out of memory" before
+  it is read; stop the tape then.
+- `:e` replaces the text (VI65 doesn't ask about unsaved changes).
+
+In the emulator, what the TK2000 saves goes to `recorded.ct2`, next to the inserted tape (the
+emulator's own recording, from Nov 2026): insert it to load the file back. `tools/ct2txt.py
+TAPE.ct2` writes the files of a tape as `.txt`; `tools/txt2ct2.py FILE.txt NAME OUT.ct2` turns a
+text into a tape for `:e`.
+
+### Leaving and coming back
+
+`:q` goes back to BASIC (by a reset); the text stays in memory. **`CALL 16387`** returns to the
+editor with the text, the cursor and the file name as they were (`CALL 16384` starts it again,
+empty). BASIC programs, `HGR2` and `NEW` don't touch the text area (`$60A3-$BEFF`), but loading
+another program over it does.
 
 ### Keys
 
@@ -52,9 +80,8 @@ Missing on the keyboard: `[ ] { } \ | ~ _` and the backquote.
 
 ## Not done yet
 
-- **Files**: `:w` and `:e` answer "i/o error". Next step: save and load on tape (and later the
-  disk).
-- `:q` resets the machine: back to BASIC's prompt, but the screen stays in mono with the text.
+- Files on disk.
+- `:q` leaves the screen in mono with the text.
 - Tested only in the emulator.
 
 ## Build
@@ -68,16 +95,18 @@ make dist       # dist/vi65.ct2 and dist/vi65.wav
 make build/run  # the headless emulator (EMU = the emulator's src/, default ~/pessoal/tk2000/src)
 ```
 
-`build/run build/vi65.ct2 -t 80 $(python3 tools/keys.py 50 'ihello{esc}') -s 79:shot.ppm` types
-keys at emulated times and takes a screenshot (`tools/keys.py` explains the key syntax).
+`build/run build/vi65.ct2 -t 80 $(python3 tools/keys.py 56 'ihello{esc}') -s 79:shot.ppm` types
+keys at emulated times and takes a screenshot (`tools/keys.py` explains the key syntax; the
+editor is ready about 54 s after LOADT). `-r rec.ct2` records what it saves on tape, `-i
+TIME:FILE.ct2` inserts a tape and plays it (`tools/harness/run.cpp`).
 
 ## How the TK2000 version differs from the Apple II one
 
 The source is VI65's svn trunk (`vi65/`, the original in `reference/vi65/code/`), assembled with
 `TARGET=2 GFX=2 TK=1`. Every change is under `.if TK`:
 
-- loads at `$4000` (the Apple version at `$0C00`); the text uses memory up to `$BFFF`, hi-res
-  page 2 included (never shown): about 41K of text;
+- loads at `$4000` (the Apple version at `$0C00`); the text uses `$60A3-$BEFF` (hi-res page 2
+  included, never shown): about 24K;
 - screen: mono (`$C051`; the font has single pixels) and page 1; the Apple's `$C052`/`$C057` are
   the TK2000's tape relay, not touched;
 - keyboard: `tk.asm` scans the matrix in place of the Apple's `$C000` latch, and the display
@@ -86,7 +115,12 @@ The source is VI65's svn trunk (`vi65/`, the original in `reference/vi65/code/`)
   insert mode;
 - CTRL keys: `k_control` = 96, as the Apple target's source is ASCII ("e"-96 = CTRL-E);
 - starts with an empty line (the Apple version loads `doc.seq` from the disk at start);
-- no DOS: load/save stubbed, `:q` jumps to the reset vector.
+- files on tape with the ROM's `SAVET`/`LOADT` routines (`$EC9A`, `$EDAE`) in place of DOS
+  (`tk.asm`): `:w` writes the text in the free memory and saves it from there; `:e` loads it
+  below `$BF00` (the header's address is changed while the ROM prints the file name through
+  CSW, which also keeps the ROM's messages off the screen) and takes the lines from there as the
+  Apple version takes them from DOS, alloc using only the memory already read;
+- `:q` jumps to the reset vector; `CALL 16387` (`$4003`) resumes, swapping the zero page back.
 
 ## How VI65 draws the letters
 

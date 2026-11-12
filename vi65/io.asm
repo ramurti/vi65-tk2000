@@ -47,6 +47,7 @@ open            .proc
                 sta icax2,x
                 jmp ciov                ;open
                 .pend
+		.elsif TK
 		.elsif TARGET==APPLE2
 open            .proc
                 pha
@@ -157,6 +158,8 @@ close           .proc
                 sta iccom,x
                 jmp ciov                ;close
                 .pend
+		.elsif TK
+close           = tkclose
 		.elsif TARGET==APPLE2
 close           .proc
                 ldy #cl

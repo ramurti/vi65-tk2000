@@ -401,6 +401,9 @@ k_control	= 64
                 .word prgend-*-2
 		.fi
                 jmp start
+		.if TK
+                jmp resume              ;CALL 16387: back to the editor after :q, text kept
+		.fi
 		.default
                 .word *+2
                 .word ss, 2010
@@ -573,6 +576,21 @@ old             jmp $ffff
                 .pend
 
 		.endswitch
+
+		.if TK
+resume          cld
+                ldx #$ff
+                txs
+                ldx #zpend-zpstart-1    ;BASIC's zero page out, the editor's back
+-               lda zpstart,x
+                sta zpsave,x
+                lda zpvi,x
+                sta zpstart,x
+                dex
+                bpl -
+                jsr displayinit
+                jmp kloop2
+		.fi
 
 start
 		.if TK
@@ -2494,6 +2512,11 @@ notfound        .ptext "-- not found --"
 notcmd          .ptext "-- not a command --"
 ioerr           .ptext "-- i/o error --"
 banner          .ptext "vi65 0.3 soci/singular"
+		.if TK
+reading         .ptext "-- reading the tape --"
+writing         .ptext "-- writing the tape --"
+saved           .ptext "-- saved --"
+		.fi
                 .here
                 .pend
 
@@ -2536,10 +2559,6 @@ setstatus       .proc
 
 load            .proc
                 jsr checkname
-		.if TK                  ;TK2000: no files yet
-                lda #statusmsg.ioerr
-                jmp setstatusmsg
-		.fi
                 jsr freebuf
                 lda #0
                 sta dotpos
@@ -2550,6 +2569,9 @@ load            .proc
 		.if TARGET==ATARI800
                 lda #4
                 jsr open
+		.elsif TK
+                jsr tkread
+                bcs failed
 		.elsif TARGET==APPLE2
                 lda #255
                 sta $d8                 ;onerr flag
@@ -2604,6 +2626,21 @@ loop		.if TARGET==ATARI800
                 bmi nomem
                 ldx icbl+$20
                 dex
+		.elsif TK
+                ldx #0
+-               jsr tkgetc
+                bcs eof
+                cmp #k_return
+                beq +
+                sta linebuffer+1,x
+                inx
+                cpx #250
+                blt -
+                bge +
+eof             txa
+                bne +                   ;the last line had no CR
+                jmp failed
++
 		.elsif TARGET==APPLE2
                 ldx #0
 -               jsr moncin
@@ -2695,7 +2732,7 @@ o
                 .fi
 
 nomem
-		.if TARGET==APPLE2
+		.if TARGET==APPLE2 && !TK
 oldsp           ldx #0
                 txs
                 .fi
@@ -2718,7 +2755,11 @@ failed
                 geq +
 
 j
-		.if TARGET==APPLE2
+		.if TK
+                jsr tkpoll              ;a key: back to the editor, the rest loads meanwhile
+                lda bufn
+                bne +
+		.elsif TARGET==APPLE2
                 lda $c000
                 bmi +
                 .else
@@ -2755,13 +2796,11 @@ checkname       .proc
 
 save            .proc
                 jsr checkname
-		.if TK                  ;TK2000: no files yet
-                lda #statusmsg.ioerr
-                jmp setstatusmsg
-		.fi
 		.if TARGET==ATARI800
                 lda #8
                 jsr open
+		.elsif TK
+                jsr tkwopen
 		.elsif TARGET==APPLE2
                 lda #255
                 sta $d8                 ;onerr flag
@@ -2820,6 +2859,18 @@ loop
 		lda #0
                 sta icbl+1,x
                 jsr ciov                ;output
+		.elsif TK
+		ldy #4
+                lda (dotstart),y
+                beq +
+                tax
+-               iny
+                lda (dotstart),y
+                jsr tkput
+                dex
+                bne -
++               lda #k_return
+                jsr tkput
 		.elsif TARGET==APPLE2
 		ldy #4
                 lda (dotstart),y
@@ -2869,12 +2920,16 @@ loop
                 jsr dotnext
                 jmp loop
 ki
-		.if TARGET==APPLE2
+		.if TARGET==APPLE2 && !TK
 oldsp           ldx #0
                 txs
                 .fi
 failed
+		.if TK
+                jsr tkwrite
+		.else
                 jsr close
+		.fi
 
 		.if TARGET!=ATARI800 && TARGET!=APPLE2
                 lda status
@@ -3023,4 +3078,7 @@ filename        .fill width-2
 		.if TARGET!=C64 && TARGET!=PLUGIN
 zpsave          .fill zpend-zpstart
                 .fi
+		.if TK
+zpvi            .fill zpend-zpstart     ;the editor's zero page while BASIC runs
+		.fi
 memory

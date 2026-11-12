@@ -192,6 +192,13 @@ exit            pla
                 #movew irq.old+1, virq
                 cli
                 .fi
+		.if TK
+                ldx #zpend-zpstart-1    ;kept for resume
+-               lda zpstart,x
+                sta zpvi,x
+                dex
+                bpl -
+		.fi
                 ldx #zpend-zpstart-1
 -               lda zpsave,x
                 sta zpstart,x

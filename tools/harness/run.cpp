@@ -2,10 +2,11 @@
 // and dumps memory, all in emulated time.
 //
 // run TAPE.ct2|DISK.dsk (booted with CALL 49408; times from then) [-t SECONDS] [-s TIME:FILE.ppm]... [-k TIME:DURATION:KEY]... [-m ADDR:LEN]...
-//     [-a TIME:DURATION:FILE.wav] [-w TIME:ADDR:HEXBYTES] [-T TIME:TEXT]
+//     [-a TIME:DURATION:FILE.wav] [-w TIME:ADDR:HEXBYTES] [-T TIME:TEXT] [-r FILE.ct2] [-i TIME:FILE.ct2]
 //   times in emulated seconds counted from Play; KEY = left right up down space return ctrl or a letter, S-KEY with SHIFT;
 //   -T types TEXT (letters as plain keys, \n = RETURN) with the emulator's typing queue;
-//   -a records the emulator's audio output (CAudio's samples, as the SDL player gets them)
+//   -a records the emulator's audio output (CAudio's samples, as the SDL player gets them);
+//   -r appends what the program writes to tape to FILE.ct2; -i inserts FILE.ct2 at TIME and plays it
 #include "pch.h"
 #include "Bus.h"
 #include "Cpu6502.h"
@@ -107,7 +108,7 @@ static void dump(const std::vector<std::pair<int, int>>& mems) {
 	}
 }
 
-struct SEvent { double t; int kind; std::string arg; SDL_Keycode code; };	// kind: 0 shot, 1 key down, 2 key up, 3 poke, 4 type
+struct SEvent { double t; int kind; std::string arg; SDL_Keycode code; };	// kind: 0 shot, 1 key down, 2 key up, 3 poke, 4 type, 5 tape
 
 int main(int argc, char** argv) {
 	if (argc < 2) {
@@ -148,6 +149,11 @@ int main(int argc, char** argv) {
 				if (val[k] == '\\' && k + 1 < val.size() && val[k + 1] == 'n') { text += '\n'; k++; } else { text += val[k]; }
 			}
 			events.push_back({ atof(val.substr(0, c).c_str()), 4, text, 0 });
+		} else if (opt == "-r") {
+			tape.setRecordFile(val);
+		} else if (opt == "-i") {
+			auto c = val.find(':');
+			events.push_back({ atof(val.substr(0, c).c_str()), 5, val.substr(c + 1), 0 });
 		} else if (opt == "-m") {
 			auto c = val.find(':');
 			mems.push_back({ (int)strtol(val.substr(0, c).c_str(), nullptr, 16), atoi(val.substr(c + 1).c_str()) });
@@ -189,6 +195,12 @@ int main(int argc, char** argv) {
 				}
 			} else if (e.kind == 4) {
 				kb.typeText(e.arg);
+			} else if (e.kind == 5) {
+				if (!tape.insertCt2(e.arg.c_str())) {
+					fprintf(stderr, "cannot read %s\n", e.arg.c_str());
+				}
+				tape.play();
+				printf("t=%.1f tape %s\n", now, e.arg.c_str());
 			} else {
 				key(e.code, e.kind == 1, e.arg == "S");
 			}
@@ -204,6 +216,9 @@ int main(int argc, char** argv) {
 		}
 	}
 	printf("t=%.1f end\n", now);
+	if (tape.getRecordedBlocks()) {
+		printf("recorded: %u blocks -> %s\n", tape.getRecordedBlocks(), tape.getRecordFile().c_str());
+	}
 	if (wavRec.from >= 0) {
 		wavRec.write(audio.getSampleRate());
 		printf("audio: %zu samples -> %s\n", wavRec.samples.size(), wavRec.file.c_str());
