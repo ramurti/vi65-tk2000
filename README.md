@@ -40,7 +40,7 @@ too big, `:q` and `CALL 16387`.
   `NOTES`. The files are plain text (CR after each line), so `LOADT NOTES` in BASIC reads them
   too, and other files on the tape are skipped as LOADT does.
 - **No way to cancel a load** other than RESET (it waits for the tape, as LOADT). A file bigger
-  than the free memory (about 24K, less 5 bytes per line) is refused with "out of memory" before
+  than the free memory (about 23K, less 5 bytes per line) is refused with "out of memory" before
   it is read; stop the tape then.
 - `:e` replaces the text (VI65 doesn't ask about unsaved changes).
 - **Several files on one tape:** each `:w` is recorded after the last one (don't rewind in
@@ -58,7 +58,7 @@ text into a tape for `:e`.
 
 `:q` goes back to BASIC with the screen cleared; the text stays in memory. **`CALL 16387`** returns to the
 editor with the text, the cursor and the file name as they were (`CALL 16384` starts it again,
-empty). BASIC programs, `HGR2` and `NEW` don't touch the text area (`$60A3-$BEFF`), but loading
+empty). BASIC programs, `HGR2` and `NEW` don't touch the text area (`$6376-$BEFF`), but loading
 another program over it does.
 
 ### Keys
@@ -84,6 +84,24 @@ keys before this.
 
 Missing on the keyboard: `[ ] { } \ | ~ _` and the backquote.
 
+### Accents
+
+In insert mode, `'` (SHIFT + 7) and `&` (SHIFT + 6) wait for the next key, one after the other:
+
+| Keys | Give |
+|---|---|
+| `'` then a e i o u (or A E I O U) | á é í ó ú (Á É Í Ó Ú) |
+| `'` then c (or C) | ç (Ç) |
+| `&` then a o (or A O) | ã õ (Ã Õ) |
+| `'` or `&` then SPACE | `'` or `&` alone |
+| `'` or `&` then another key | the sign, then that key (`it's`) |
+
+`coração` is `c o r a ' c & a o`. The text keeps them as Latin-1 (`á` = `$E1`), on tape too;
+`tools/txt2ct2.py` and `tools/ct2txt.py` convert from and to UTF-8. Capitals with an accent are
+drawn one size smaller, so the accent fits in the 8 lines of a character (`tools/accents.py`
+makes the glyphs from the font's letters: `vi65/latin1.fnt`; `--preview PNG` draws them). No
+accents in the `:` and `/` lines, and no â ê ô à yet (the glyphs exist, no keys).
+
 ## Not done yet
 
 - Files on disk.
@@ -100,9 +118,9 @@ make dist       # dist/vi65.ct2 and dist/vi65.wav
 make build/run  # the headless emulator (EMU = the emulator's src/, default ~/pessoal/tk2000/src)
 ```
 
-`build/run build/vi65.ct2 -t 80 $(python3 tools/keys.py 56 'ihello{esc}') -s 79:shot.ppm` types
+`build/run build/vi65.ct2 -t 80 $(python3 tools/keys.py 62 'ihello{esc}') -s 79:shot.ppm` types
 keys at emulated times and takes a screenshot (`tools/keys.py` explains the key syntax; the
-editor is ready about 54 s after LOADT). `-r rec.ct2` records what it saves on tape, `-i
+editor is ready about 58 s after LOADT). `-r rec.ct2` records what it saves on tape, `-i
 TIME:FILE.ct2` inserts a tape and plays it (`tools/harness/run.cpp`).
 
 ## How the TK2000 version differs from the Apple II one
@@ -110,8 +128,8 @@ TIME:FILE.ct2` inserts a tape and plays it (`tools/harness/run.cpp`).
 The source is VI65's svn trunk (`vi65/`, the original in `reference/vi65/code/`), assembled with
 `TARGET=2 GFX=2 TK=1`. Every change is under `.if TK`:
 
-- loads at `$4000` (the Apple version at `$0C00`); the text uses `$60A3-$BEFF` (hi-res page 2
-  included, never shown): about 24K;
+- loads at `$4000` (the Apple version at `$0C00`); the text uses `$6376-$BEFF` (hi-res page 2
+  included, never shown): about 23K;
 - screen: mono (`$C051`; the font has single pixels) and page 1; the Apple's `$C052`/`$C057` are
   the TK2000's tape relay, not touched;
 - keyboard: `tk.asm` scans the matrix in place of the Apple's `$C000` latch, and the display

@@ -60,6 +60,10 @@ loop            lsr display.now
                 stx repeat+1
                 stx oneless
                 jsr waitkey
+		.if TK
+                jsr deadkey             ;' and & before a letter: accents (tk.asm)
+                bcs loop
+		.fi
 		ldx #keylookup.insertkeys
                 jsr keylookup
                 jmp loop

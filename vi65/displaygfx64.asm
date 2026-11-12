@@ -1096,7 +1096,11 @@ class           .byte >(font+2*8*32),>font,>(font+8*32),>(font+3*8*32)
                 .byte >(font+2*8*32),>font,>(font+8*32),>(font+3*8*32)
 		.elsif TARGET==APPLE2
 class           .byte >(font+0*8*32),>(font+8*32),>(font+2*8*32),>(font+3*8*32)
+		.if TK
+                .byte >(font+0*8*32),>(font+8*32),>(font+4*8*32),>(font+5*8*32)    ;$C0-$FF: accented
+		.else
                 .byte >(font+0*8*32),>(font+8*32),>(font+2*8*32),>(font+3*8*32)
+		.fi
                 .else
 class           .byte >font,>(font+8*32),>font,>(font+2*8*32)
 		.byte >(font+2*8*32),>(font+3*8*32),>(font+2*8*32),>(font+3*8*32)

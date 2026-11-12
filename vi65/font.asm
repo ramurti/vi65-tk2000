@@ -65,6 +65,10 @@ fnt2		= bytes(bits(fnt)[::-1])[::-1]
 		.text fnt2[$40*8:$60*8]
 		.text fnt2[$20*8:$40*8]
 		.text fnt2[$40*8:$80*8]
+		.if TK
+latin1		= binary("latin1.fnt")	;TK2000: Latin-1 $C0-$FF (tools/accents.py)
+		.text bytes(bits(latin1)[::-1])[::-1]
+		.fi
 		.else
 		.text fnt[$40*8:$41*8]
 		.text fnt[$61*8:$7b*8]

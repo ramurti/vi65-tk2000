@@ -1,7 +1,11 @@
 # VI65 for the TK2000: the Apple II hi-res target (56 columns) with the TK2000 keyboard
-VI65 = $(wildcard vi65/*.asm) vi65/font5x8.fnt
+VI65 = $(wildcard vi65/*.asm) vi65/font5x8.fnt vi65/latin1.fnt
 
 all: build/vi65.ct2
+
+# the accented letters, made from font5x8.fnt
+vi65/latin1.fnt: vi65/font5x8.fnt tools/accents.py
+	python3 tools/accents.py
 
 build/vi65.bin: $(VI65)
 	64tass -b -B -C vi65/a.asm -o $@ -DTARGET=2 -DGFX=2 -DTK=1 -L build/vi65.lst --labels=build/vi65.lbl -q

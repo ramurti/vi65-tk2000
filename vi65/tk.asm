@@ -12,6 +12,10 @@
 ;    CTRL + SHIFT + key  the symbol printed on I O P K L (- = + ^ @), else as SHIFT
 ;    arrows, RETURN      31 (k_cursorleft), CTRL-U, CTRL-J, CTRL-K, CTRL-M
 ;
+;    Accents, in insert mode (deadkey): ' then a vowel = acute, ' then c = ç, & then a or o =
+;    tilde (capitals too, Latin-1 codes, glyphs from tools/accents.py); ' or & then space =
+;    the sign alone; then any other key = the sign and that key.
+;
 ;    Keys pressed while the screen is redrawn are kept: the display calls tkpoll between lines
 ;    and waitkey reads them first (tkget). Without this, fast typing lost keys during redraws.
 ;
@@ -158,6 +162,60 @@ up              ldy ctrlalone
 +               clc
                 rts
                 .pend
+
+;insert mode: A = a key. C=1: ' or & kept, wait for the next key; else A = the key to use
+;(an accented letter, the sign alone, or the key, the sign inserted before it)
+deadkey         .proc
+                ldx dead
+                bne second
+                cmp #"'"
+                beq +
+                cmp #"&"
+                bne no
++               sta dead                ;C=1
+                rts
+no              clc
+                rts
+second          sta dkey
+                lda #0
+                sta dead
+                lda dkey
+                cmp #" "
+                beq alone
+                ldy #0
+-               txa
+                cmp pairs,y
+                bne +
+                lda dkey
+                cmp pairs+1,y
+                bne +
+                lda pairs+2,y
+                clc
+                rts
++               iny
+                iny
+                iny
+                lda pairs,y
+                bne -
+                txa                     ;no accent: the sign, then the key
+                tay
+                jsr insertmode.put2
+                lda dkey
+                clc
+                rts
+alone           txa
+                clc
+                rts
+
+pairs           .byte "'", "a", $e1, "'", "e", $e9, "'", "i", $ed, "'", "o", $f3, "'", "u", $fa
+                .byte "'", "A", $c1, "'", "E", $c9, "'", "I", $cd, "'", "O", $d3, "'", "U", $da
+                .byte "'", "c", $e7, "'", "C", $c7
+                .byte "&", "a", $e3, "&", "o", $f5, "&", "A", $c3, "&", "O", $d5
+                .byte 0
+                .pend
+
+dead            .byte 0
+dkey            .byte 0
 
 ;X = index (row * 6 + column) of the first key down, 255 if none
 scan            .proc

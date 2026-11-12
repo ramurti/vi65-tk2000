@@ -1,5 +1,6 @@
 """The files on a tape as text (what VI65's :w wrote, e.g. the emulator's recorded.ct2):
 ct2txt.py TAPE.ct2 [OUTDIR]  -> one NAME.txt per file (CR -> newline), and a list on stdout.
+The editor's Latin-1 (accented letters) is written as UTF-8.
 """
 import os
 import struct
@@ -31,7 +32,7 @@ def main():
     out = sys.argv[2] if len(sys.argv) > 2 else '.'
     for name, text in files(sys.argv[1]):
         path = os.path.join(out, (name or 'NONAME') + '.txt')
-        open(path, 'w', encoding='ascii', errors='replace').write(text.replace(b'\r', b'\n').decode('ascii', 'replace'))
+        open(path, 'w', encoding='utf-8').write(text.replace(b'\r', b'\n').decode('latin-1'))
         print(f"{name}: {len(text)} bytes -> {path}")
 
 
