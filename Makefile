@@ -21,14 +21,20 @@ build/run: tools/harness/run.cpp
 .PHONY: all
 
 # dist/vi65.wav is for a real TK2000 (play it into the cassette input; local, too big for git);
-# dist/vi65.dsk is the TKDOS master disk (MASTER) with VI65 added, for BRUN VI65, and a sample
-# text: chapter I of The Art of War (samples/guerra1.txt)
+# dist/vi65.dsk is the TKDOS master disk (MASTER) without its demo programs, with VI65 (BRUN VI65)
+# and The Art of War in Portuguese, a file per chapter (samples/guerra*.txt, :e guerra1)
 MASTER ?= $(HOME)/pessoal/tkdos2000.dsk
+DEMOS = RENUMERADOR "RENUMERADOR INSTRUCOES" RENUM.INSTR "LISTA TELEFONICA" LISTATEL \
+	"CRIA TEXTO" "LE TEXTO" "DEMO CORES" OTHELLO
+BOOK = 1 2 3 4 5 6 7 8 9 10 11a 11b 12 13
 
-dist: build/vi65.ct2 tools/mkdsk.py samples/guerra1.txt
+dist: build/vi65.ct2 tools/mkdsk.py $(BOOK:%=samples/guerra%.txt)
 	cp build/vi65.ct2 dist/
 	python3 tools/ct2wav.py dist/vi65.ct2 dist/vi65.wav
-	python3 tools/mkdsk.py $(MASTER) build/vi65.bin 0x4000 VI65 dist/vi65.dsk
-	python3 tools/mkdsk.py dist/vi65.dsk --text samples/guerra1.txt GUERRA1 dist/vi65.dsk
+	cp $(MASTER) dist/vi65.dsk
+	python3 tools/mkdsk.py dist/vi65.dsk --delete $(DEMOS)
+	python3 tools/mkdsk.py dist/vi65.dsk build/vi65.bin 0x4000 VI65 dist/vi65.dsk
+	for n in $(BOOK); do python3 tools/mkdsk.py dist/vi65.dsk --text samples/guerra$$n.txt GUERRA$$n \
+	  dist/vi65.dsk || exit 1; done
 
 .PHONY: dist

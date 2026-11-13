@@ -8,6 +8,7 @@ the control codes of vi65/tk.asm (accents), a 0 at the end.
 
 Usage: mkdsk.py MASTER.dsk BIN ADDR NAME OUT.dsk
        mkdsk.py MASTER.dsk --text FILE.txt NAME OUT.dsk   (FILE.txt in UTF-8)
+       mkdsk.py DISK.dsk --delete NAME...                 (in place, as DELETE does)
 """
 import sys
 
@@ -77,7 +78,46 @@ def add(img, data, name, kind=0x04):
     sys.exit("catalog full")
 
 
+def entries(img):
+    vtoc = sector(img, 17, 0)
+    t, s = img[vtoc + 1], img[vtoc + 2]
+    while t:
+        c = sector(img, t, s)
+        for i in range(7):
+            yield c + 0x0B + i * 35
+        t, s = img[c + 1], img[c + 2]
+
+
+def delete(img, name):
+    """frees the file's sectors and marks its entry deleted: $FF, the track in the name's last byte"""
+    vtoc = sector(img, 17, 0)
+    want = bytes(c | 0x80 for c in name.upper().ljust(30).encode())
+    for e in entries(img):
+        if img[e] in (0, 0xFF) or bytes(img[e + 3:e + 33]) != want:
+            continue
+        t, s = img[e], img[e + 1]
+        while t:
+            o = sector(img, t, s)
+            for i in range(122):
+                dt, ds = img[o + 0x0C + i * 2], img[o + 0x0D + i * 2]
+                if dt:
+                    img[vtoc + 0x38 + dt * 4 + (0 if ds >= 8 else 1)] |= 1 << (ds & 7)
+            img[vtoc + 0x38 + t * 4 + (0 if s >= 8 else 1)] |= 1 << (s & 7)
+            t, s = img[o + 1], img[o + 2]
+        img[e + 32] = img[e]
+        img[e] = 0xFF
+        return
+    sys.exit(name + " is not on the disk")
+
+
 if __name__ == "__main__":
+    if sys.argv[2] == "--delete":
+        img = bytearray(open(sys.argv[1], "rb").read())
+        for name in sys.argv[3:]:
+            delete(img, name)
+        open(sys.argv[1], "wb").write(img)
+        print("%s: %s deleted" % (sys.argv[1], ", ".join(sys.argv[3:])))
+        sys.exit()
     master, binfile, addr, name, out = sys.argv[1:]
     img = bytearray(open(master, "rb").read())
     assert len(img) == 143360, "not a 140K .dsk"

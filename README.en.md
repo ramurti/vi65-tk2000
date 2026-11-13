@@ -68,9 +68,11 @@ written by a BASIC program, a file read back by one, `t:` to the tape, `:q`, CAT
 Boot TKDOS first (in the emulator: F2 -> insert disk, then `CALL 49408`), then load the editor:
 from the same disk with `BRUN VI65` (about 15 s), or from tape as above. `make dist` writes
 `dist/vi65.dsk`, the TKDOS master disk (`MASTER=`, default `~/pessoal/tkdos2000.dsk`) with VI65
-added by `tools/mkdsk.py`, and a text to try it with: `:e guerra1` opens chapter I of *The Art of
-War* (`samples/guerra1.txt`, translated into Portuguese from Lionel Giles' 1910 English version,
-which is in the public domain). The editor sees TKDOS and then:
+added by `tools/mkdsk.py`, and a book to read with it: *The Art of War* in Portuguese, one file
+per chapter (`:e guerra1` to `:e guerra13`; chapter XI is too big for the memory left with TKDOS
+and is split in `guerra11a` and `guerra11b`). It is translated from Lionel Giles' 1910 English
+version, which is in the public domain (`samples/guerra*.txt`). The master disk's demo programs
+(OTHELLO, LISTATEL, RENUMERADOR and others) are deleted to make room; 34K stays free. The editor sees TKDOS and then:
 
 - **`:w name`** and **`:e name`** use the disk; **`:w t:name`** and **`:e t:name`** the tape.
 - Names as TKDOS takes them (up to 30 characters), in upper case: `:w notas` writes `NOTAS`.
