@@ -6,6 +6,9 @@ draws its own 5 × 8 font on the hi-res screen: **56 columns × 24 lines**, uppe
 
 ## Load and use
 
+`dist/vi65-refcard.md` is a reference card with every command, the keys and the accents, to
+read or send apart from this README.
+
 In the emulator: F2 -> insert `dist/vi65.ct2`, type `LOADT`, RETURN, F6 (play). It starts by
 itself after about a minute. On a real TK2000: `LOADT` and play `dist/vi65.wav` (made by
 `make dist`, not in git).
@@ -36,7 +39,7 @@ written by a BASIC program, a file read back by one, `t:` to the tape, `:q`, CAT
 Boot TKDOS first (in the emulator: F2 -> insert disk, then `CALL 49408`), then load the editor:
 from the same disk with `BRUN VI65` (about 15 s), or from tape as above. `make dist` writes
 `dist/vi65.dsk`, the TKDOS master disk (`MASTER=`, default `~/pessoal/tkdos2000.dsk`) with VI65
-added by `tools/mkdsk.py`; it stays local, like the master. The editor sees TKDOS and then:
+added by `tools/mkdsk.py`. The editor sees TKDOS and then:
 
 - **`:w name`** and **`:e name`** use the disk; **`:w t:name`** and **`:e t:name`** the tape.
 - Names as TKDOS takes them (up to 30 characters), in upper case: `:w notas` writes `NOTAS`.
@@ -137,7 +140,7 @@ test runner, the emulator's source and SDL2.
 
 ```sh
 make            # build/vi65.ct2
-make dist       # dist/vi65.ct2 and dist/vi65.wav
+make dist       # dist/vi65.ct2, dist/vi65.dsk and dist/vi65.wav
 make build/run  # the headless emulator (EMU = the emulator's src/, default ~/pessoal/tk2000/src)
 ```
 

@@ -20,8 +20,8 @@ build/run: tools/harness/run.cpp
 
 .PHONY: all
 
-# dist/vi65.wav is for a real TK2000 (play it into the cassette input); dist/vi65.dsk is the
-# TKDOS master disk (MASTER) with VI65 added, for BRUN VI65. Both stay local (TKDOS is not ours)
+# dist/vi65.wav is for a real TK2000 (play it into the cassette input; local, too big for git);
+# dist/vi65.dsk is the TKDOS master disk (MASTER) with VI65 added, for BRUN VI65
 MASTER ?= $(HOME)/pessoal/tkdos2000.dsk
 
 dist: build/vi65.ct2 tools/mkdsk.py

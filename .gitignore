@@ -1,5 +1,4 @@
 build/
 .venv/
 dist/*.wav
-dist/*.dsk
 __pycache__/
