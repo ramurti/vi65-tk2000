@@ -33,8 +33,10 @@ written by a BASIC program, a file read back by one, `t:` to the tape, `:q`, CAT
 
 ### Files on disk (TKDOS 3.3)
 
-Boot TKDOS first (in the emulator: F2 -> insert disk `TKDOS2000.dsk`, then `CALL 49408`), then
-load the editor from tape as above. The editor sees TKDOS and then:
+Boot TKDOS first (in the emulator: F2 -> insert disk, then `CALL 49408`), then load the editor:
+from the same disk with `BRUN VI65` (about 15 s), or from tape as above. `make dist` writes
+`dist/vi65.dsk`, the TKDOS master disk (`MASTER=`, default `~/pessoal/tkdos2000.dsk`) with VI65
+added by `tools/mkdsk.py`; it stays local, like the master. The editor sees TKDOS and then:
 
 - **`:w name`** and **`:e name`** use the disk; **`:w t:name`** and **`:e t:name`** the tape.
 - Names as TKDOS takes them (up to 30 characters), in upper case: `:w notas` writes `NOTAS`.
