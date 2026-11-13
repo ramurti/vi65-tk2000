@@ -10,7 +10,7 @@
 ;    CTRL + letter       control code (CTRL-C leaves insert mode, as ESC; CTRL-H deletes)
 ;    CTRL alone          pressed and released with no other key: CTRL-C (ESC)
 ;    CTRL + SHIFT + key  the symbol printed on I O P K L (- = + ^ @), else as SHIFT
-;    arrows, RETURN      31 (k_cursorleft), CTRL-U, CTRL-J, CTRL-K, CTRL-M
+;    arrows, RETURN      31 (k_cursorleft), 30 (k_cursorright), CTRL-J, CTRL-K, CTRL-M
 ;
 ;    Accents, in insert mode (deadkey): ' then a vowel = acute, ' then c = ç, " then a or o =
 ;    tilde (capitals too, Latin-1 codes, glyphs from tools/accents.py); ' or " then space =
@@ -264,7 +264,7 @@ keys            .text 0, "bvcxz"
                 .text 0, "gfdsa"
                 .text " ", "trewq"
                 .text 31, "54321"
-                .text 21, "67890"
+                .text k_cursorright, "67890"
                 .text 10, "yuiop"
                 .text 11, "hjkl:"
                 .text 13, "nm,.?"
@@ -272,7 +272,7 @@ shifted         .text 0, "BVCXZ"
                 .text 0, "GFDSA"
                 .text " ", "TREWQ"
                 .text 31, "%$#", '"', "!"
-                .text 21, "&'()*"
+                .text k_cursorright, "&'()*"
                 .text 10, "YUIOP"
                 .text 11, "HJKL;"
                 .text 13, "NM<>/"

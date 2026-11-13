@@ -360,7 +360,11 @@ k_cursorleft    = 31            ;LEFT moves, CTRL-H deletes
 		.else
 k_cursorleft    = 255
 		.fi
+		.if TK
+k_cursorright   = 30            ;not CTRL-U, which scrolls
+		.else
 k_cursorright   = 21
+		.fi
 k_del           = 8
 k_return        = 13
 k_ins           = 255

@@ -196,7 +196,8 @@ The source is VI65's svn trunk (`vi65/`, the original in `reference/vi65/code/`)
 - keyboard: `tk.asm` scans the matrix in place of the Apple's `$C000` latch, and the display
   polls it between lines (`tkpoll`) so keys aren't lost during redraws;
 - LEFT gives code 31 (`k_cursorleft`) and moves (in the `:` and `/` lines it deletes); on the
-  Apple it is CTRL-H, which deletes in insert mode;
+  Apple it is CTRL-H, which deletes in insert mode; RIGHT gives 30 (`k_cursorright`), not the
+  Apple's CTRL-U, which scrolls half a screen up here;
 - CTRL keys: `k_control` = 96, as the Apple target's source is ASCII ("e"-96 = CTRL-E);
 - starts with an empty line (the Apple version loads `doc.seq` from the disk at start);
 - files on tape with the ROM's `SAVET`/`LOADT` routines (`$EC9A`, `$EDAE`) in place of DOS

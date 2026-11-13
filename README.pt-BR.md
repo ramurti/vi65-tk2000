@@ -210,7 +210,8 @@ O código é o trunk do svn do VI65 (`vi65/`, o original em `reference/vi65/code
 - teclado: `tk.asm` varre a matriz no lugar do latch `$C000` do Apple, e a tela a consulta entre
   as linhas (`tkpoll`) para não perder teclas durante o redesenho;
 - a seta para a esquerda dá o código 31 (`k_cursorleft`) e move (nas linhas de `:` e `/` ela
-  apaga); no Apple ela é CTRL-H, que apaga no modo de inserção;
+  apaga); no Apple ela é CTRL-H, que apaga no modo de inserção; a seta para a direita dá 30
+  (`k_cursorright`), e não o CTRL-U do Apple, que aqui rola meia tela para cima;
 - teclas CTRL: `k_control` = 96, porque o código da versão do Apple é ASCII ("e"-96 = CTRL-E);
 - começa com uma linha vazia (a versão do Apple carrega `doc.seq` do disco ao começar);
 - arquivos em fita com as rotinas `SAVET`/`LOADT` da ROM (`$EC9A`, `$EDAE`) no lugar do DOS
