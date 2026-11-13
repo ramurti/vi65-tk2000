@@ -7,7 +7,7 @@ draws its own 5 × 8 font on the hi-res screen: **56 columns × 24 lines**, uppe
 ## Load and use
 
 `dist/vi65-refcard.md` is a reference card with every command, the keys and the accents, to
-read or send apart from this README.
+read or send apart from this README (in Portuguese: `dist/vi65-refcard-pt.md`).
 
 In the emulator: F2 -> insert `dist/vi65.ct2`, type `LOADT`, RETURN, F6 (play). It starts by
 itself after about a minute. On a real TK2000: `LOADT` and play `dist/vi65.wav` (made by
