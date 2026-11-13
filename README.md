@@ -20,16 +20,37 @@ The editor starts with one empty line in normal mode, as vi. VI65 has a subset o
   SPACE, marks (`m` then `'` or the backquote, which the TK2000 lacks); counts (`3dd`, `5j`);
 - scroll: CTRL-F, CTRL-B, CTRL-E, CTRL-Y, `z` commands;
 - `/` search, CTRL-G (file information);
-- `:e :ene :f :w :wq :q`: files on tape (below).
+- `:e :ene :f :w :wq :q`: files on disk or tape (below).
 
 Not in VI65: word motions (`w b e`), undo (`u`), `n`, `r`, `.`.
 
 Checked in the emulator so far: insert, RETURN, CTRL-C, CTRL-H, LEFT in insert mode and in the
 `:` line, all SHIFT letters and symbols, CTRL+SHIFT symbols, `x dd yy p G gg`, `/` search, key
 repeat, `:w` and `:e` on tape (a 9K file of 300 lines loaded, edited, saved and compared), a file
-too big, `:q` and `CALL 16387`.
+too big, `:q` and `CALL 16387`; with TKDOS: `:w` and `:e` on disk, a name not found, a file
+written by a BASIC program, a file read back by one, `t:` to the tape, `:q`, CATALOG and
+`CALL 16387`.
+
+### Files on disk (TKDOS 3.3)
+
+Boot TKDOS first (in the emulator: F2 -> insert disk `TKDOS2000.dsk`, then `CALL 49408`), then
+load the editor from tape as above. The editor sees TKDOS and then:
+
+- **`:w name`** and **`:e name`** use the disk; **`:w t:name`** and **`:e t:name`** the tape.
+- Names as TKDOS takes them (up to 30 characters), in upper case: `:w notas` writes `NOTAS`.
+- `:e` of a name that isn't there says "not found"; other disk errors say "i/o error".
+- The files are TKDOS text files, as `PRINT` to a file writes them (CR after each line, bit 7
+  set): BASIC programs read them with `INPUT` and the editor reads theirs. The accented letters
+  are stored as control codes 1-26 (BASIC sees them as such); TK2000 BASIC shows lower case
+  letters as other signs.
+- Memory: the editor sets **MAXFILES 1** (it opens one file at a time); the text gets
+  `$66B4-$98FF`, about 12K (22K without TKDOS). Run MAXFILES again after `:q` if a BASIC
+  program needs more files.
+- A save of a few lines takes about 6 s (TKDOS empties the old file first: OPEN, DELETE, OPEN).
 
 ### Files on tape
+
+Without TKDOS (or with `t:` before the name):
 
 - **`:w name`** saves the text on tape: press REC (and PLAY) on the recorder first. The status
   line says "writing the tape", then "saved".
@@ -40,7 +61,7 @@ too big, `:q` and `CALL 16387`.
   `NOTES`. The files are plain text (CR after each line), so `LOADT NOTES` in BASIC reads them
   too, and other files on the tape are skipped as LOADT does.
 - **No way to cancel a load** other than RESET (it waits for the tape, as LOADT). A file bigger
-  than the free memory (about 23K, less 5 bytes per line) is refused with "out of memory" before
+  than the free memory (about 22K, or 12K with TKDOS, less 5 bytes per line) is refused with "out of memory" before
   it is read; stop the tape then.
 - `:e` replaces the text (VI65 doesn't ask about unsaved changes).
 - **Several files on one tape:** each `:w` is recorded after the last one (don't rewind in
@@ -58,7 +79,7 @@ text into a tape for `:e`.
 
 `:q` goes back to BASIC with the screen cleared; the text stays in memory. **`CALL 16387`** returns to the
 editor with the text, the cursor and the file name as they were (`CALL 16384` starts it again,
-empty). BASIC programs, `HGR2` and `NEW` don't touch the text area (`$6376-$BEFF`), but loading
+empty). BASIC programs, `HGR2` and `NEW` don't touch the text area (`$66B4-$BEFF`, or up to `$98FF` with TKDOS), but loading
 another program over it does.
 
 ### Keys
@@ -105,7 +126,6 @@ accents in the `:` and `/` lines, and no â ê ô à yet (the glyphs exist, no k
 
 ## Not done yet
 
-- Files on disk.
 - Tested only in the emulator.
 
 ## Build
@@ -119,18 +139,24 @@ make dist       # dist/vi65.ct2 and dist/vi65.wav
 make build/run  # the headless emulator (EMU = the emulator's src/, default ~/pessoal/tk2000/src)
 ```
 
-`build/run build/vi65.ct2 -t 80 $(python3 tools/keys.py 62 'ihello{esc}') -s 79:shot.ppm` types
+`build/run build/vi65.ct2 -t 80 $(python3 tools/keys.py 66 'ihello{esc}') -s 79:shot.ppm` types
 keys at emulated times and takes a screenshot (`tools/keys.py` explains the key syntax; the
-editor is ready about 58 s after LOADT). `-r rec.ct2` records what it saves on tape, `-i
-TIME:FILE.ct2` inserts a tape and plays it (`tools/harness/run.cpp`).
+editor is ready about 63 s after LOADT). `-r rec.ct2` records what it saves on tape, `-i
+TIME:FILE.ct2` inserts a tape and plays it (`tools/harness/run.cpp`). With a `.dsk` in place of
+the tape it boots the disk (`CALL 49408`); then `-T '35:LOADT\n' -i 36:build/vi65.ct2` loads
+the editor (ready at about 112 s). The memory dumps (`-m`) also print the CPU's registers.
 
 ## How the TK2000 version differs from the Apple II one
 
 The source is VI65's svn trunk (`vi65/`, the original in `reference/vi65/code/`), assembled with
 `TARGET=2 GFX=2 TK=1`. Every change is under `.if TK`:
 
-- loads at `$4000` (the Apple version at `$0C00`); the text uses `$6376-$BEFF` (hi-res page 2
-  included, never shown): about 23K;
+- loads at `$4000` (the Apple version at `$0C00`); the text uses `$66B4-$BEFF` (hi-res page 2
+  included, never shown): about 22K; with TKDOS, up to its HIMEM;
+- disk files (`tk.asm`): as the Apple version (DOS commands printed after CTRL-D), plus what
+  TKDOS needs to take them from a program: its hooks connected (`$3EA`), output state at the
+  start of a line (`$AA52`), BASIC running (`$76`, and the prompt `$33` not `>`), its errors
+  through ONERR (`$D8`, `$9D5A`; the code comes in X), all put back after each use;
 - screen: mono (`$C051`; the font has single pixels) and page 1; the Apple's `$C052`/`$C057` are
   the TK2000's tape relay, not touched;
 - keyboard: `tk.asm` scans the matrix in place of the Apple's `$C000` latch, and the display

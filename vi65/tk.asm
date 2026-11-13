@@ -298,7 +298,7 @@ row2            .byte 0
 ;    Files on tape, with the ROM's SAVET and LOADT routines: plain text, a CR after each line,
 ;    the name's first 6 characters in upper case (LOADT "NAME" in BASIC finds them too).
 ;
-;    :w writes the text below alloc's limit ($BF00) and saves it from there. :e loads the file
+;    :w writes the text below alloc's limit (tktop: $BF00, or TKDOS's HIMEM) and saves it from there. :e loads the file
 ;    there too (the ROM loads to the address in the file's header; the header is moved while the
 ;    ROM prints the file name, through CSW), then the lines are taken from it as the Apple version
 ;    reads them from DOS, while alloc may only use the memory below what is still to be read.
@@ -314,12 +314,13 @@ tapewanted      = $0474                 ;the name LOADT looks for (ROM's copy)
 tapewrite       = $ec9a                 ;A1 ($3c) to A2 ($3e)
 taperead        = $edae
 bell            = $fbd9
-cout            = $fdf0
-TAPETOP         = (>memoryend-1)*256    ;alloc's limit
 
 ;save: the text goes from memtop up (nothing may alloc until it is saved: the status line first)
 tkwopen         .proc
-                lda #statusmsg.writing
+                jsr isdisk
+                bcc +
+                jmp dkwopen
++               lda #statusmsg.writing
                 jsr tkshow
                 jsr garbage
                 lda memtop
@@ -335,9 +336,15 @@ tkwopen         .proc
 
 ;A = a byte of the text to save (X and Y kept)
 tkput           .proc
+                pha
+                lda dkmode
+                beq +
+                pla
+                jmp dkput
++               pla
                 sty tky
                 ldy tkp+1
-                cpy #>TAPETOP
+                cpy tktop
                 bcs full
                 ldy #0
                 sta (tkp),y
@@ -354,7 +361,10 @@ full            lda #1
 
 ;saves what tkput wrote
 tkwrite         .proc
-                lda tkfull
+                lda dkmode
+                beq +
+                jmp dkwrite
++               lda tkfull
                 beq +
                 lda #statusmsg.nomem
                 jmp setstatusmsg
@@ -381,7 +391,10 @@ tkwrite         .proc
 
 ;load: C=1 if the file couldn't be read (the status line says why)
 tkread          .proc
-                tsx
+                jsr isdisk
+                bcc +
+                jmp dkread
++               tsx
                 stx tksp
                 lda #statusmsg.reading
                 jsr tkshow
@@ -413,10 +426,11 @@ tkread          .proc
 
 ;C=1 at the end of the file read, else A = its next byte
 tkgetc          .proc
-                lda tkp
-                cmp #<TAPETOP
-                lda tkp+1
-                sbc #>TAPETOP
+                lda dkmode
+                beq +
+                jmp dkgetc
++               lda tkp+1
+                cmp tktop
                 bcs +
                 ldy #0
                 lda (tkp),y
@@ -431,7 +445,10 @@ tkgetc          .proc
 
 ;end of a load: alloc may use all its memory again
 tkclose         .proc
-                lda #>TAPETOP
+                lda dkmode
+                beq +
+                jmp dkclose
++               lda tktop
                 sta alloc.end+1
                 rts
                 .pend
@@ -445,16 +462,21 @@ tkshow          .proc
 
 ;the file name for the ROM, from vi65's
 name            .proc
+                jsr tprefix
+                lda #0
+                bcc +
+                lda #2                  ;t: left out
++               sta tkofs
                 ldx #0
--               lda #" "
-                cpx filename
+-               txa
+                clc
+                adc tkofs
+                tay
+                lda #" "
+                cpy filename
                 bcs +
-                lda filename+1,x
-                cmp #"a"
-                blt +
-                cmp #"z"+1
-                bge +
-                and #$df
+                lda filename+1,y
+                jsr upper
 +               ora #$80
                 sta tapename,x
                 inx
@@ -464,6 +486,10 @@ name            .proc
                 .pend
 
 hook            .proc
+                lda csw
+                sta oldcsw
+                lda csw+1
+                sta oldcsw+1
                 lda #<tkcout
                 sta csw
                 lda #>tkcout
@@ -475,16 +501,16 @@ hook            .proc
                 .pend
 
 unhook          .proc
-                lda #<cout
+                lda oldcsw              ;the ROM's or TKDOS's
                 sta csw
-                lda #>cout
+                lda oldcsw+1
                 sta csw+1
                 rts
                 .pend
 
 ;the ROM's character output while it reads or writes: nothing printed. The bell ends a load
 ;or a save: after "ERR" it is an error. While reading, the header of the file wanted is moved
-;below TAPETOP (it is in memory when its name is printed, before the ROM uses it).
+;below tktop (it is in memory when its name is printed, before the ROM uses it).
 tkcout          .proc
                 sta tkchar
                 stx tkx
@@ -515,11 +541,14 @@ bel             jsr bell
                 lda tapeend+1
                 sbc tapestart+1
                 sta tklen+1
-                sec                     ;the new start, below TAPETOP and above memtop
-                lda #<(TAPETOP-1)
+                ldy tktop               ;the new start, below tktop and above memtop
+                dey
+                sty tklen+2
+                sec
+                lda #$ff
                 sbc tklen
                 tax
-                lda #>(TAPETOP-1)
+                lda tklen+2
                 sbc tklen+1
                 bcc big
                 tay
@@ -528,9 +557,9 @@ bel             jsr bell
                 bcc big
                 stx tapestart
                 sty tapestart+1
-                lda #<(TAPETOP-1)
+                lda #$ff
                 sta tapeend
-                lda #>(TAPETOP-1)
+                lda tklen+2
                 sta tapeend+1
 out             lda tkchar
                 ldx tkx
@@ -553,5 +582,377 @@ tkchar          .byte 0
 tkx             .byte 0
 tky             .byte 0
 tksp            .byte 0
-tklen           .word 0
+tklen           .fill 3                 ;length - 1, and tktop - 1
 tkstart         .word 0
+tkofs           .byte 0
+oldcsw          .word 0
+tktop           .byte >memoryend-1      ;alloc's limit (TKDOS: HIMEM's page)
+
+;C=1 if the file name starts with t: (the tape, when TKDOS is loaded)
+tprefix         .proc
+                lda filename
+                cmp #2
+                bcc no
+                lda filename+2
+                cmp #":"
+                bne no
+                lda filename+1
+                ora #$20
+                cmp #"t"
+                bne no
+                sec
+                rts
+no              clc
+                rts
+                .pend
+
+;C=1 when the file is on disk: TKDOS loaded and no t:
+isdisk          .proc
+                lda dos
+                beq no
+                jsr tprefix
+                bcs no
+                sec
+                rts
+no              clc
+                rts
+                .pend
+
+upper           .proc
+                cmp #"a"
+                blt +
+                cmp #"z"+1
+                bge +
+                and #$df
++               rts
+                .pend
+
+;
+;    Files on disk, with TKDOS 3.3 (the Apple's DOS 3.3, at the same addresses: hooks in CSW and
+;    KSW, commands printed after CTRL-D). Used when TKDOS is loaded and the name has no t:. The
+;    files are text files as TKDOS BASIC writes them: characters with bit 7 set, CR after each
+;    line; the accented letters, which would clash with that, as control codes (accents).
+;    MAXFILES 1 at the start leaves more memory: the editor opens one file at a time.
+;
+;    TKDOS errors (END OF DATA at the end of a file too) come through its ONERR vector to dkfail,
+;    which returns from the routine that saved the stack in dksp (the dk... routines with "C=1:
+;    a TKDOS error"). The BASIC state TKDOS looks at is set for each use and put back after it:
+;    a program running (else the commands are refused, or TKDOS goes back to the prompt), ONERR.
+
+dosonerr        = $d8                   ;BASIC's ONERR flag
+curlin          = $76                   ;BASIC's line number, high byte ($FF: direct mode)
+prompt          = $33                   ;">": direct mode too, for TKDOS
+dosvec          = $9d5a                 ;TKDOS's ONERR exit
+doslang         = $aab6
+dosmode         = $aa52                 ;0: at the start of a line
+himem           = $73
+
+;A = the end page of the memory for the text; TKDOS: detected, MAXFILES 1
+dosinit         .proc
+                lda $3d0                ;TKDOS's vectors: JMP, JMP, JMP
+                cmp #$4c
+                bne no
+                lda $3d3
+                cmp #$4c
+                bne no
+                lda $3d6
+                cmp #$4c
+                bne no
+                inc dos
+                jsr dosbegin
+                jsr maxf
+                jsr dosend
+                lda himem+1
+                rts
+no              lda #>memoryend
+                rts
+
+maxf            tsx                     ;C=1: a TKDOS error
+                stx dksp
+                lda #dostext.maxfiles
+                jsr doscmd
+                clc
+                rts
+                .pend
+
+;load: C=1 if the file couldn't be opened (the status line says why)
+dkread          .proc
+                lda #statusmsg.dreading
+                jsr tkshow
+                jsr dosbegin
+                jsr open
+                bcc +
+                jsr dkclose
+                sec
+                rts
++               ldx #<(insertmode.notxt-4)  ;the status line cleared
+                lda #>(insertmode.notxt-4)
+                jsr setstatus
+                clc
+                rts
+
+open            tsx                     ;C=1: a TKDOS error
+                stx dksp
+                lda #dostext.close
+                jsr doscmd
+                lda #dostext.verify     ;FILE NOT FOUND (OPEN would make an empty one)
+                jsr doscmd
+                lda #dostext.open
+                jsr doscmd
+                lda #dostext.read
+                jsr doscmd
+                clc
+                rts
+                .pend
+
+;C=1 at the end of the file (or on an error), else A = its next byte (X kept)
+dkgetc          .proc
+                stx tkx
+                lda dkerr
+                bne end
+                jsr get
+                bcs end
+                and #$7f
+                cmp #$20
+                bcs ok
+                cmp #k_return
+                beq ok
+                ldx #accents.code-accents.latin1-1
+-               cmp accents.code,x
+                beq +
+                dex
+                bpl -
+                bmi ok
++               lda accents.latin1,x
+ok              ldx tkx
+                clc
+                rts
+end             ldx tkx
+                sec
+                rts
+
+get             tsx                     ;C=1: a TKDOS error
+                stx dksp
+                jsr moncin
+                clc
+                rts
+                .pend
+
+;save: the file opened (emptied) for writing; errors are told by dkwrite
+dkwopen         .proc
+                lda #statusmsg.dwriting
+                jsr tkshow
+                jsr dosbegin
+                jmp open
+
+open            tsx                     ;C=1: a TKDOS error
+                stx dksp
+                lda #dostext.close
+                jsr doscmd
+                lda #dostext.open       ;DELETE needs the file; OPEN makes it if it isn't there
+                jsr doscmd
+                lda #dostext.delete     ;else the old end would stay after a shorter text
+                jsr doscmd
+                lda #dostext.open
+                jsr doscmd
+                lda #dostext.write
+                jsr doscmd
+                clc
+                rts
+                .pend
+
+;A = a byte of the text to save (X and Y kept)
+dkput           .proc
+                sta tkchar
+                stx tkx
+                sty tky
+                ldx dkerr
+                bne out
+                cmp #k_return
+                bne +
+                lda #$0d
+                bne put
++               cmp #$c0
+                bcc put
+                ldx #accents.code-accents.latin1-1
+-               cmp accents.latin1,x
+                beq +
+                dex
+                bpl -
+                lda #"?"
+                bne put
++               lda accents.code,x
+put             ora #$80
+                jsr out1
+out             lda tkchar
+                ldx tkx
+                ldy tky
+                rts
+
+out1            tsx                     ;C=1: a TKDOS error
+                stx dksp
+                jsr moncout
+                clc
+                rts
+                .pend
+
+;end of a save
+dkwrite         .proc
+                jsr dkclose
+                lda dkerr
+                bne +
+                lda #statusmsg.saved
+                jmp setstatusmsg
++               rts
+                .pend
+
+;the file closed, TKDOS's state put back; an error on the status line (END OF DATA isn't one)
+dkclose         .proc
+                lda dkmode
+                beq done
+                lda #0
+                sta dkmode
+                lda dkerr
+                pha
+                jsr close
+                pla
+                beq +
+                sta dkerr               ;the first error is the one told
++               jsr dosend
+                lda dkerr
+                beq done
+                cmp #5
+                beq done
+                cmp #6
+                bne +
+                lda #statusmsg.notfound
+                jmp setstatusmsg
++               lda #statusmsg.ioerr
+                jmp setstatusmsg
+done            rts
+
+close           tsx                     ;C=1: a TKDOS error
+                stx dksp
+                lda #dostext.close
+                jsr doscmd
+                clc
+                rts
+                .pend
+
+;TKDOS errors come to dkfail, BASIC as TKDOS wants it while a program runs
+dosbegin        .proc
+                jsr $fe93               ;PR#0 and IN#0 (the ROM's tape routines may leave
+                jsr $fe89               ;KSW changed), then TKDOS connects its hooks ($A851)
+                jsr $3ea
+                lda dosonerr
+                sta saved
+                lda curlin
+                sta saved+1
+                lda dosvec
+                sta saved+2
+                lda dosvec+1
+                sta saved+3
+                lda doslang
+                sta saved+4
+                lda prompt
+                sta saved+5
+                lda #$ff
+                sta dosonerr
+                lda #1
+                sta curlin
+                sta prompt
+                sta doslang
+                sta dkmode
+                lda #<dkfail
+                sta dosvec
+                lda #>dkfail
+                sta dosvec+1
+                lda #0
+                sta dkerr
+                rts
+saved           .fill 6
+                .pend
+
+dosend          .proc
+                lda dosbegin.saved
+                sta dosonerr
+                lda dosbegin.saved+1
+                sta curlin
+                lda dosbegin.saved+2
+                sta dosvec
+                lda dosbegin.saved+3
+                sta dosvec+1
+                lda dosbegin.saved+4
+                sta doslang
+                lda dosbegin.saved+5
+                sta prompt
+                lda #0
+                sta dkmode
+                rts
+                .pend
+
+;a TKDOS error (X = its code): back from the routine that saved dksp, C=1
+dkfail          .proc
+                txa
+                bne +
+                lda #255
++               sta dkerr
+                ldx dksp
+                txs
+                sec
+                rts
+                .pend
+
+;CTRL-D, the TKDOS command A, the file name if the command ends with a space, CR
+doscmd          .proc
+                tay
+                lda #0                  ;TKDOS's output state: start of a line (as after a CR,
+                sta dosmode             ;without printing one), where CTRL-D starts a command
+                lda #$84
+                jsr moncout
+-               lda dostext,y
+                beq +
+                ora #$80
+                jsr moncout
+                iny
+                bne -
++               lda dostext-1,y
+                cmp #" "
+                bne +
+                ldx #0
+-               cpx filename
+                bcs +
+                lda filename+1,x
+                jsr upper
+                ora #$80
+                jsr moncout
+                inx
+                bne -
++               lda #$8d
+                jmp moncout
+                .pend
+
+dostext         .proc
+                .logical 0
+maxfiles        .null "MAXFILES 1"
+close           .null "CLOSE"
+verify          .null "VERIFY "
+open            .null "OPEN "
+read            .null "READ "
+delete          .null "DELETE "
+write           .null "WRITE "
+                .here
+                .pend
+
+;the accented letters (Latin-1) and their codes in disk files (no 4: CTRL-D, no 13: CR)
+accents         .proc
+latin1          .byte $e1, $e9, $ed, $f3, $fa, $e2, $ea, $f4, $e0, $e3, $f5, $e7
+                .byte $c1, $c9, $cd, $d3, $da, $c2, $ca, $d4, $c0, $c3, $d5, $c7
+code            .byte 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14
+                .byte 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26
+                .pend
+
+dos             .byte 0                 ;1: TKDOS loaded
+dkmode          .byte 0                 ;1: a disk file is being read or written
+dkerr           .byte 0                 ;TKDOS's error code, 0 if none
+dksp            .byte 0

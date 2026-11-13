@@ -9,7 +9,9 @@
 //   -r appends what the program writes to tape to FILE.ct2; -i inserts FILE.ct2 at TIME and plays it
 #include "pch.h"
 #include "Bus.h"
+#define private public                 // the CPU's registers, printed with the memory dumps
 #include "Cpu6502.h"
+#undef private
 #include "Rom.h"
 #include "Ram.h"
 #include "Video.h"
@@ -99,6 +101,9 @@ static void key(SDL_Keycode code, bool down, bool shift) {
 }
 
 static void dump(const std::vector<std::pair<int, int>>& mems) {
+	if (!mems.empty()) {
+		printf("  PC=%04X S=%02X A=%02X X=%02X Y=%02X\n", cpu.mRegPC.value, cpu.mRegS, cpu.mRegA, cpu.mRegX, cpu.mRegY);
+	}
 	for (auto& [addr, len] : mems) {
 		printf("  [%04X]", addr);
 		for (int i = 0; i < len; i++) {

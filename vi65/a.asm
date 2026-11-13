@@ -714,7 +714,7 @@ start
                 jsr ciov                ;keyboard
 		.case APPLE2
 		.if TK
-                lda #>memoryend
+                jsr dosinit             ;TKDOS: its HIMEM, after MAXFILES 1 (tk.asm)
                 sta alloc.end+1
 		.else
                 lda $74
@@ -726,6 +726,10 @@ start
 		.fi
 		.endswitch
                 dec alloc.end+1
+		.if TK
+                lda alloc.end+1
+                sta tktop
+		.fi
 		jsr clearmem
 
                 ;.comment
@@ -2520,6 +2524,8 @@ banner          .ptext "vi65 0.3 soci/singular"
 reading         .ptext "-- reading the tape --"
 writing         .ptext "-- writing the tape --"
 saved           .ptext "-- saved --"
+dreading        .ptext "-- reading the disk --"
+dwriting        .ptext "-- writing the disk --"
 		.fi
                 .here
                 .pend
