@@ -4,6 +4,28 @@ A vi text editor for the TK2000: [VI65](https://sourceforge.net/projects/vi65/) 
 (2010-2013, GPL v2), built from its Apple II hi-res target. The TK2000 has no text mode; VI65
 draws its own 5 × 8 font on the hi-res screen: **56 columns × 24 lines**, upper and lower case.
 
+## What this version adds to VI65
+
+On top of the original VI65 (details in the sections below):
+
+- **Runs on the TK2000:** loads from tape (`LOADT`) or from a TKDOS disk (`BRUN VI65`), and
+  starts with an empty text.
+- **The TK2000 keyboard:** lower case letters, every symbol the keyboard has (SHIFT and
+  CTRL + SHIFT), key repeat, and keys typed during a screen redraw kept instead of lost.
+- **ESC without an ESC key:** CTRL pressed and released alone (or CTRL-C).
+- **Portuguese accents:** `'` and `"` before a letter give á é í ó ú ç ã õ and their capitals,
+  with glyphs drawn for the 56-column font.
+- **Files on tape:** `:w` and `:e` with the TK2000's own tape format; several files on one tape;
+  you can edit while a file is still loading; the files are plain text that BASIC loads too.
+- **Files on disk with TKDOS 3.3:** `:w` and `:e` use the disk when TKDOS is loaded, and `t:name`
+  still uses the tape; the files are TKDOS text files that BASIC programs read and write.
+- **Half-page scrolling:** CTRL-D and CTRL-U (CTRL-F and CTRL-B, a whole page, were already there).
+- **LEFT deletes** in the `:` and `/` lines.
+- **Leaving and coming back:** `:q` returns to a clean BASIC screen with the text kept in
+  memory, and `CALL 16387` brings it back with the cursor and file name.
+- **Ready to use:** `dist/` has the tape (`vi65.ct2`, and `vi65.wav` with `make dist`), a TKDOS
+  disk with the editor (`vi65.dsk`), and reference cards in English and Portuguese.
+
 ## Load and use
 
 `dist/vi65-refcard.md` is a reference card with every command, the keys and the accents, to
