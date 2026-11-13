@@ -73,8 +73,10 @@ um programa em BASIC, um arquivo lido por um, `t:` para a fita, `:q`, CATALOG e 
 Primeiro dê boot no TKDOS (no emulador: F2 -> inserir o disco, depois `CALL 49408`), depois
 carregue o editor: do mesmo disco com `BRUN VI65` (cerca de 15 s), ou da fita como acima.
 `make dist` gera `dist/vi65.dsk`, o disco mestre do TKDOS (`MASTER=`, por padrão
-`~/pessoal/tkdos2000.dsk`) com o VI65 acrescentado por `tools/mkdsk.py`. O editor percebe o
-TKDOS e então:
+`~/pessoal/tkdos2000.dsk`) com o VI65 acrescentado por `tools/mkdsk.py`, e um texto para
+experimentar: `:e guerra1` abre o capítulo I de *A Arte da Guerra* (`samples/guerra1.txt`,
+traduzido para o português da versão inglesa de Lionel Giles, de 1910, que está em domínio
+público). O editor percebe o TKDOS e então:
 
 - **`:w nome`** e **`:e nome`** usam o disco; **`:w t:nome`** e **`:e t:nome`**, a fita.
 - Os nomes são como o TKDOS os aceita (até 30 caracteres), em maiúsculas: `:w notas` grava
