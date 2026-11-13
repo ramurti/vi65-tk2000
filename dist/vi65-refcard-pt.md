@@ -1,6 +1,8 @@
-# VI65 para o TK2000 — cartão de referência
+# VI65 para o TK2000 / MPF-II — cartão de referência
 
-Um editor de texto vi para o TK2000: 56 colunas × 24 linhas, maiúsculas e minúsculas, acentos
+Português · [English](vi65-refcard.md)
+
+Um editor de texto vi para o TK2000 e o Microprofessor II (MPF-II): 56 colunas × 24 linhas, maiúsculas e minúsculas, acentos
 do português, arquivos em fita ou em disco (TKDOS 3.3). Baseado no VI65 de Soci/Singular (GPL v2).
 
 ## Para começar

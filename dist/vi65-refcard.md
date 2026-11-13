@@ -1,6 +1,8 @@
-# VI65 for the TK2000 — reference card
+# VI65 for the TK2000 / MPF-II — reference card
 
-A vi text editor for the TK2000: 56 columns × 24 lines, upper and lower case, Portuguese
+[Português](vi65-refcard-pt.md) · English
+
+A vi text editor for the TK2000 and the Microprofessor II (MPF-II): 56 columns × 24 lines, upper and lower case, Portuguese
 accents, files on tape or on disk (TKDOS 3.3). Based on VI65 by Soci/Singular (GPL v2).
 
 ## Starting
