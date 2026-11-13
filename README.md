@@ -86,20 +86,21 @@ Missing on the keyboard: `[ ] { } \ | ~ _` and the backquote.
 
 ### Accents
 
-In insert mode, `'` (SHIFT + 7) and `&` (SHIFT + 6) wait for the next key, one after the other:
+In insert mode, `'` (SHIFT + 7) and `"` (SHIFT + 2) wait for the next key, one after the other:
 
 | Keys | Give |
 |---|---|
 | `'` then a e i o u (or A E I O U) | á é í ó ú (Á É Í Ó Ú) |
 | `'` then c (or C) | ç (Ç) |
-| `&` then a o (or A O) | ã õ (Ã Õ) |
-| `'` or `&` then SPACE | `'` or `&` alone |
-| `'` or `&` then another key | the sign, then that key (`it's`) |
+| `"` then a o (or A O) | ã õ (Ã Õ) |
+| `'` or `"` then SPACE | `'` or `"` alone |
+| `'` or `"` then another key | the sign, then that key (`it's`) |
 
-`coração` is `c o r a ' c & a o`. The text keeps them as Latin-1 (`á` = `$E1`), on tape too;
+`coração` is `c o r a ' c " a o`. The text keeps them as Latin-1 (`á` = `$E1`), on tape too;
 `tools/txt2ct2.py` and `tools/ct2txt.py` convert from and to UTF-8. Capitals with an accent are
 drawn one size smaller, so the accent fits in the 8 lines of a character (`tools/accents.py`
-makes the glyphs from the font's letters: `vi65/latin1.fnt`; `--preview PNG` draws them). No
+makes the glyphs from the font's letters: `vi65/latin1.fnt`; `--preview PNG` draws them). In the emulator on a Mac, a layout with dead keys (Brazilian - Pro: SHIFT + 6 is `^`) can swallow
+keys; `'` and `"` are SHIFT + 7 and SHIFT + 2 there, which aren't dead keys. No
 accents in the `:` and `/` lines, and no â ê ô à yet (the glyphs exist, no keys).
 
 ## Not done yet

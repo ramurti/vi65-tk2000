@@ -61,7 +61,7 @@ loop            lsr display.now
                 stx oneless
                 jsr waitkey
 		.if TK
-                jsr deadkey             ;' and & before a letter: accents (tk.asm)
+                jsr deadkey             ;' and " before a letter: accents (tk.asm)
                 bcs loop
 		.fi
 		ldx #keylookup.insertkeys

@@ -12,8 +12,8 @@
 ;    CTRL + SHIFT + key  the symbol printed on I O P K L (- = + ^ @), else as SHIFT
 ;    arrows, RETURN      31 (k_cursorleft), CTRL-U, CTRL-J, CTRL-K, CTRL-M
 ;
-;    Accents, in insert mode (deadkey): ' then a vowel = acute, ' then c = ç, & then a or o =
-;    tilde (capitals too, Latin-1 codes, glyphs from tools/accents.py); ' or & then space =
+;    Accents, in insert mode (deadkey): ' then a vowel = acute, ' then c = ç, " then a or o =
+;    tilde (capitals too, Latin-1 codes, glyphs from tools/accents.py); ' or " then space =
 ;    the sign alone; then any other key = the sign and that key.
 ;
 ;    Keys pressed while the screen is redrawn are kept: the display calls tkpoll between lines
@@ -163,14 +163,14 @@ up              ldy ctrlalone
                 rts
                 .pend
 
-;insert mode: A = a key. C=1: ' or & kept, wait for the next key; else A = the key to use
+;insert mode: A = a key. C=1: ' or " kept, wait for the next key; else A = the key to use
 ;(an accented letter, the sign alone, or the key, the sign inserted before it)
 deadkey         .proc
                 ldx dead
                 bne second
                 cmp #"'"
                 beq +
-                cmp #"&"
+                cmp #'"'
                 bne no
 +               sta dead                ;C=1
                 rts
@@ -210,7 +210,7 @@ alone           txa
 pairs           .byte "'", "a", $e1, "'", "e", $e9, "'", "i", $ed, "'", "o", $f3, "'", "u", $fa
                 .byte "'", "A", $c1, "'", "E", $c9, "'", "I", $cd, "'", "O", $d3, "'", "U", $da
                 .byte "'", "c", $e7, "'", "C", $c7
-                .byte "&", "a", $e3, "&", "o", $f5, "&", "A", $c3, "&", "O", $d5
+                .byte '"', "a", $e3, '"', "o", $f5, '"', "A", $c3, '"', "O", $d5
                 .byte 0
                 .pend
 
