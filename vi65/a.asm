@@ -836,6 +836,9 @@ normalkeys      .byte "x", "X", "D", "C", "s", "S"
                 .byte "e"-k_control, "y"-k_control
                 .byte "f"-k_control
                 .byte "b"-k_control
+                .if TK
+                .byte "d"-k_control, "u"-k_control
+                .fi
                 .byte 0
                 .fi
 
@@ -912,6 +915,9 @@ keyroutines
                 .rta scroll_ctrl_e, scroll_ctrl_y
                 .rta scroll_ctrl_f
                 .rta scroll_ctrl_b
+                .if TK
+                .rta scroll_ctrl_d, scroll_ctrl_u
+                .fi
                 .rta motiontry
                 .fi
 

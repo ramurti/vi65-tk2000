@@ -37,7 +37,8 @@ Not on the keyboard: `[ ] { } \ | ~ _` and the backquote.
 
 | | |
 |---|---|
-| `h` `j` `k` `l` | left, down, up, right (or the arrows) |
+| **arrows** | left, down, up, right |
+| `h` `j` `k` `l` | left, down, up, right |
 | SPACE / CTRL-H | right / left |
 | CTRL-N CTRL-J / CTRL-P | down / up |
 
@@ -79,7 +80,8 @@ A number before a motion repeats it: `5j` goes 5 lines down.
 
 | | |
 |---|---|
-| CTRL-F / CTRL-B | one screen forward / back |
+| CTRL-F / CTRL-B | one screen forward / back (page down / up) |
+| CTRL-D / CTRL-U | half a screen down / up, the cursor too |
 | CTRL-E / CTRL-Y | one line down / up |
 
 Lines longer than 56 columns: `zh` `zl` scroll one column left / right, `zH` `zL` half a screen,

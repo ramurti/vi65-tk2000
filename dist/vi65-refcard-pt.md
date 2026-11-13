@@ -38,7 +38,8 @@ Não existem no teclado: `[ ] { } \ | ~ _` e a crase (acento grave).
 
 | | |
 |---|---|
-| `h` `j` `k` `l` | esquerda, baixo, cima, direita (ou as setas) |
+| **setas** | esquerda, baixo, cima, direita |
+| `h` `j` `k` `l` | esquerda, baixo, cima, direita |
 | ESPAÇO / CTRL-H | direita / esquerda |
 | CTRL-N CTRL-J / CTRL-P | baixo / cima |
 
@@ -80,7 +81,8 @@ Um número antes de um movimento o repete: `5j` desce 5 linhas.
 
 | | |
 |---|---|
-| CTRL-F / CTRL-B | uma tela para a frente / para trás |
+| CTRL-F / CTRL-B | uma tela para a frente / para trás (página abaixo / acima) |
+| CTRL-D / CTRL-U | meia tela para baixo / para cima, com o cursor |
 | CTRL-E / CTRL-Y | uma linha para baixo / para cima |
 
 Linhas com mais de 56 colunas: `zh` `zl` rolam uma coluna para a esquerda / direita, `zH` `zL`

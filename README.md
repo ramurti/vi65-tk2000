@@ -21,7 +21,7 @@ The editor starts with one empty line in normal mode, as vi. VI65 has a subset o
 - delete and change: `x X D C s S J`, `d c y` + a motion (`dd`, `d$`, `cc`, `yy`), `p P`;
 - motions: `h j k l` (and the arrows), `0 ^ $ |`, `f t F T`, `H M L`, `G gg`, `+ -` RETURN,
   SPACE, marks (`m` then `'` or the backquote, which the TK2000 lacks); counts (`3dd`, `5j`);
-- scroll: CTRL-F, CTRL-B, CTRL-E, CTRL-Y, `z` commands;
+- scroll: CTRL-F, CTRL-B, CTRL-D, CTRL-U (half a screen, added for the TK2000), CTRL-E, CTRL-Y, `z` commands;
 - `/` search, CTRL-G (file information);
 - `:e :ene :f :w :wq :q`: files on disk or tape (below).
 

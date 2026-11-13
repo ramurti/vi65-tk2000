@@ -206,3 +206,72 @@ scroll_ctrl_y   .proc
                 tax
                 geq scroll_ctrl_e.tl
                 .pend
+
+                .if TK
+;n; <h4>CTRL-D</h4>
+
+;n; Scroll window half a screen downwards (not past the
+;n; last line), the cursor the same number of lines.
+
+scroll_ctrl_d   .proc
+                ldx #(height-1)/2
+                jsr mulrepeatl
+                lda lines               ;room = lines-(height-1)-topline
+                sec
+                sbc #height-1
+                sta num
+                lda lines+1
+                sbc #0
+                sta num+1
+                bcc move                ;shorter than the screen
+                lda num
+                sec
+                sbc topline
+                sta num
+                lda num+1
+                sbc topline+1
+                sta num+1
+                bcc move
+                lda num                 ;the smaller of room and count
+                cmp repeat
+                lda num+1
+                sbc repeat+1
+                bcc +
+                #movew repeat, num
++               lda topline
+                clc
+                adc num
+                sta topline
+                lda topline+1
+                adc num+1
+                sta topline+1
+move            jmp motion_j
+                .pend
+
+;n; <h4>CTRL-U</h4>
+
+;n; Scroll window half a screen upwards (not before the
+;n; first line), the cursor the same number of lines.
+
+scroll_ctrl_u   .proc
+                ldx #(height-1)/2
+                jsr mulrepeatl
+                lda topline
+                cmp repeat
+                lda topline+1
+                sbc repeat+1
+                bcs +
+                lda #0
+                sta topline
+                sta topline+1
+                geq move
++               lda topline
+                sec
+                sbc repeat
+                sta topline
+                lda topline+1
+                sbc repeat+1
+                sta topline+1
+move            jmp motion_k
+                .pend
+                .fi
